@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0c0e14">
+  <title>Workflow du Wagon</title>
+  <%= stylesheet_link_tag "application", media: "all" %>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Fraunces:ital,wght@0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-top">
+      <button class="burger" id="burger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="header-text">
+        <a href="/" style="text-decoration:none;color:inherit"><h1>🧠 Workflow du Wagon</h1></a>
+        <p>Data Science · Workflows · Code</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile drawer overlay -->
+  <div class="drawer-overlay" id="drawerOverlay"></div>
+
+  <!-- Mobile drawer -->
+  <nav class="drawer" id="drawer">
+    <div class="drawer-header">
+      <span>Workflows</span>
+      <button class="drawer-close" id="drawerClose">✕</button>
+    </div>
+    <div class="drawer-sections">
+      <% categories = {
+        "Préparation" => @workflows.select { |w| %w[preprocessing eda].include?(w[:slug]) },
+        "Supervisé" => @workflows.select { |w| %w[linreg logreg trees boosting knn svm].include?(w[:slug]) },
+        "Non-supervisé" => @workflows.select { |w| %w[kmeans pca].include?(w[:slug]) },
+        "Deep Learning" => @workflows.select { |w| %w[nn cnn rnn].include?(w[:slug]) },
+        "Production" => @workflows.select { |w| %w[pipeline mlops].include?(w[:slug]) }
+      } %>
+      <% categories.each do |cat, items| %>
+        <div class="drawer-cat"><%= cat %></div>
+        <% items.each do |w| %>
+          <a href="<%= workflow_path(w[:slug]) %>"
+             class="drawer-link <%= 'active' if w[:slug] == @current[:slug] %>">
+            <span class="drawer-icon"><%= w[:icon] %></span>
+            <span><%= w[:title] %></span>
+          </a>
+        <% end %>
+      <% end %>
+      <div class="drawer-cat">Outils</div>
+      <a href="/glossaire" class="drawer-link"><span class="drawer-icon">📖</span><span>Glossaire</span></a>
+        <a href="/methodes" class="drawer-link"><span class="drawer-icon">⚙️</span><span>Méthodes ML</span></a>
+    </div>
+  </nav>
+
+  <!-- Desktop horizontal nav -->
+  <nav class="nav-desktop" id="navDesktop">
+    <% @workflows.each do |w| %>
+      <a href="<%= workflow_path(w[:slug]) %>"
+         class="nav-btn <%= 'active' if w[:slug] == @current[:slug] %>">
+        <span class="nav-icon"><%= w[:icon] %></span>
+        <span class="nav-label"><%= w[:title] %></span>
+      </a>
+    <% end %>
+    <a href="/methodes" class="nav-btn nav-btn--glossary"><span class="nav-icon">⚙️</span><span class="nav-label">Méthodes ML</span></a>
+    <a href="/glossaire" class="nav-btn nav-btn--glossary"><span class="nav-icon">📖</span><span class="nav-label">Glossaire</span></a>
+  </nav>
+
+  <main class="content">
+    <%= yield %>
+  </main>
+
+  <%= render "shared/glossary_drawer" %>
+
+
+  <script>
+    const burger = document.getElementById('burger');
+    const drawer = document.getElementById('drawer');
+    const overlay = document.getElementById('drawerOverlay');
+    const closeBtn = document.getElementById('drawerClose');
+
+    function openDrawer() {
+      drawer.classList.add('open');
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    burger.addEventListener('click', openDrawer);
+    overlay.addEventListener('click', closeDrawer);
+    closeBtn.addEventListener('click', closeDrawer);
+
+    // Close drawer on link click (mobile)
+    document.querySelectorAll('.drawer-link').forEach(link => {
+      link.addEventListener('click', closeDrawer);
+    });
+
+    // Highlight
+    document.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+    const activeBtn = document.querySelector('.nav-desktop .nav-btn.active');
+    if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  </script>
+
+</body>
+</html>

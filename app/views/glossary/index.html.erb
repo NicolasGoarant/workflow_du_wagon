@@ -1,0 +1,85 @@
+<div class="glossary-page">
+
+  <div class="glossary-header">
+    <h1>📖 Glossaire Data Science</h1>
+    <p class="glossary-subtitle"><%= GLOSSARY.length %> termes · Recherche instantanée · Liens vers les workflows</p>
+  </div>
+
+  <!-- Search + Filters -->
+  <div class="glossary-controls">
+    <div class="glossary-search">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="glossarySearch" placeholder="Chercher un terme..." autocomplete="off">
+    </div>
+    <div class="glossary-filters" id="glossaryFilters">
+      <button class="filter-btn active" data-cat="all">Tout (<%= GLOSSARY.length %>)</button>
+      <% @categories.each do |cat| %>
+        <button class="filter-btn" data-cat="<%= cat %>">
+          <%= cat %> (<%= GLOSSARY.count { |t| t[:category] == cat } %>)
+        </button>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Terms list -->
+  <div class="glossary-list" id="glossaryList">
+    <% @terms.each do |term| %>
+      <div class="glossary-card" data-category="<%= term[:category] %>" data-term="<%= term[:term].downcase %>">
+        <div class="glossary-card-top">
+          <h3 class="glossary-term"><%= term[:term] %></h3>
+          <span class="glossary-cat cat-<%= term[:category].downcase.tr(' éè', '-ee').gsub(/[^a-z0-9-]/, '') %>"><%= term[:category] %></span>
+        </div>
+        <p class="glossary-def"><%= term[:definition] %></p>
+        <% if term[:code] %>
+          <div class="glossary-code">
+            <pre><code class="language-python"><%= term[:code] %></code></pre>
+          </div>
+        <% end %>
+        <a href="<%= workflow_path(term[:workflow]) %>" class="glossary-link">
+          → voir dans <strong><%= WORKFLOWS.find { |w| w[:slug] == term[:workflow] }&.dig(:title) || term[:workflow] %></strong>
+        </a>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="glossary-empty" id="glossaryEmpty" style="display:none;">
+    Aucun terme trouvé 🤷
+  </div>
+
+</div>
+
+<script>
+  // Highlight.js
+  document.querySelectorAll('.glossary-code code').forEach(el => hljs.highlightElement(el));
+
+  const search = document.getElementById('glossarySearch');
+  const cards = document.querySelectorAll('.glossary-card');
+  const filters = document.querySelectorAll('.filter-btn');
+  const empty = document.getElementById('glossaryEmpty');
+  let activeCat = 'all';
+
+  function filterCards() {
+    const query = search.value.toLowerCase().trim();
+    let visible = 0;
+    cards.forEach(card => {
+      const matchCat = activeCat === 'all' || card.dataset.category === activeCat;
+      const matchSearch = !query || card.dataset.term.includes(query) ||
+                          card.querySelector('.glossary-def').textContent.toLowerCase().includes(query);
+      const show = matchCat && matchSearch;
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    empty.style.display = visible === 0 ? '' : 'none';
+  }
+
+  search.addEventListener('input', filterCards);
+
+  filters.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filters.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCat = btn.dataset.cat;
+      filterCards();
+    });
+  });
+</script>

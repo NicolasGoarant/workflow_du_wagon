@@ -1,0 +1,46 @@
+/* ====== PLOTS (Chart.js) ====== */
+.plot-container {
+  margin-top: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  overflow: hidden;
+}
+.plot-container canvas {
+  max-height: 280px;
+}
+.plot-title {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 12px;
+  text-align: center;
+}
+.plot-annotation {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  line-height: 1.5;
+  padding: 8px 12px;
+  background: rgba(34,197,94,0.06);
+  border-left: 3px solid var(--green);
+  border-radius: 0 6px 6px 0;
+}
+
+/* Heatmap table */
+.plot-heatmap { overflow-x: auto; }
+.plot-heatmap table {
+  width: 100%; border-collapse: collapse;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+}
+.plot-heatmap th, .plot-heatmap td {
+  padding: 8px 10px; text-align: center;
+  border: 1px solid var(--border);
+}
+.plot-heatmap th {
+  background: var(--surface2); color: var(--text-soft);
+  font-weight: 600; font-size: 0.7rem;
+}
+.plot-heatmap td { min-width: 55px; }

@@ -1,0 +1,78 @@
+<!-- Glossary floating button -->
+<button class="glossary-trigger" id="glossaryTrigger" aria-label="Glossaire">📖</button>
+
+<!-- Glossary drawer overlay -->
+<div class="glossary-drawer-overlay" id="glossaryDrawerOverlay"></div>
+
+<!-- Glossary drawer -->
+<aside class="glossary-drawer" id="glossaryDrawer">
+  <div class="glossary-drawer-header">
+    <h3>📖 Glossaire</h3>
+    <button class="glossary-drawer-close" id="glossaryDrawerClose">✕</button>
+  </div>
+  <div class="glossary-drawer-search">
+    <input type="text" id="gdrawerSearch" placeholder="Chercher un terme..." autocomplete="off">
+  </div>
+  <div class="glossary-drawer-body" id="gdrawerBody">
+    <% GLOSSARY.sort_by { |t| t[:term].downcase }.each do |t| %>
+      <div class="gdrawer-item" data-term="<%= t[:term].downcase %>" data-def="<%= t[:definition].downcase %>">
+        <div class="gdrawer-term"><%= t[:term] %></div>
+        <div class="gdrawer-def"><%= t[:definition] %></div>
+        <% if t[:code] %>
+          <div class="gdrawer-code"><%= t[:code] %></div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</aside>
+
+<script>
+(function() {
+  const trigger = document.getElementById('glossaryTrigger');
+  const drawer = document.getElementById('glossaryDrawer');
+  const overlay = document.getElementById('glossaryDrawerOverlay');
+  const closeBtn = document.getElementById('glossaryDrawerClose');
+  const search = document.getElementById('gdrawerSearch');
+  const items = document.querySelectorAll('.gdrawer-item');
+
+  function openGlossary() {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => search.focus(), 300);
+  }
+  function closeGlossary() {
+    drawer.classList.remove('open');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  trigger.addEventListener('click', openGlossary);
+  overlay.addEventListener('click', closeGlossary);
+  closeBtn.addEventListener('click', closeGlossary);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeGlossary();
+  });
+
+  search.addEventListener('input', () => {
+    const q = search.value.toLowerCase().trim();
+    let visible = 0;
+    items.forEach(item => {
+      const match = !q || item.dataset.term.includes(q) || item.dataset.def.includes(q);
+      item.style.display = match ? '' : 'none';
+      if (match) visible++;
+    });
+    // Show/hide empty state
+    let emptyEl = document.getElementById('gdrawerEmpty');
+    if (!emptyEl) {
+      emptyEl = document.createElement('div');
+      emptyEl.id = 'gdrawerEmpty';
+      emptyEl.className = 'gdrawer-empty';
+      emptyEl.textContent = 'Aucun terme trouvé';
+      document.getElementById('gdrawerBody').appendChild(emptyEl);
+    }
+    emptyEl.style.display = visible === 0 ? '' : 'none';
+  });
+})();
+</script>

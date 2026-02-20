@@ -1,0 +1,109 @@
+<div class="methods-page">
+
+  <div class="methods-header">
+    <h1>⚙️ Méthodes ML</h1>
+    <p class="methods-subtitle">Comprendre .fit(), .transform(), .predict() et les autres — la logique unifiée</p>
+  </div>
+
+  <!-- Mental model -->
+  <div class="methods-mental-model">
+    <div class="mental-phase mp-purple">
+      <div class="mp-icon">🧠</div>
+      <div class="mp-label">Apprendre</div>
+      <div class="mp-methods">.fit() .compile()</div>
+    </div>
+    <div class="mental-arrow">→</div>
+    <div class="mental-phase mp-cyan">
+      <div class="mp-icon">🔄</div>
+      <div class="mp-label">Transformer</div>
+      <div class="mp-methods">.transform() .fit_transform()</div>
+    </div>
+    <div class="mental-arrow">→</div>
+    <div class="mental-phase mp-green">
+      <div class="mp-icon">🎯</div>
+      <div class="mp-label">Prédire</div>
+      <div class="mp-methods">.predict() .predict_proba()</div>
+    </div>
+    <div class="mental-arrow">→</div>
+    <div class="mental-phase mp-yellow">
+      <div class="mp-icon">📏</div>
+      <div class="mp-label">Évaluer</div>
+      <div class="mp-methods">.score() .evaluate()</div>
+    </div>
+  </div>
+
+  <div class="methods-golden-rule">
+    <strong>🔑 La règle d'or :</strong> <code>fit</code> sur le train, <code>transform</code> / <code>predict</code> sur le test. Si tu <code>fit</code> sur le test, c'est du data leakage.
+  </div>
+
+  <!-- Methods by phase -->
+  <% @phases.each do |phase| %>
+    <% phase_methods = @methods.select { |m| m[:phase] == phase } %>
+    <% first = phase_methods.first %>
+    <div class="methods-phase-header phase-<%= first[:phase_color] %>">
+      <span><%= first[:phase_icon] %></span>
+      <span>Phase : <%= phase %></span>
+    </div>
+
+    <% phase_methods.each do |m| %>
+      <div class="method-card mc-<%= m[:phase_color] %>">
+        <div class="method-card-header">
+          <h3 class="method-name"><%= m[:method] %></h3>
+          <div class="method-frameworks">
+            <% m[:frameworks].each do |fw| %>
+              <span class="fw-badge fw-<%= fw %>"><%= fw %></span>
+            <% end %>
+          </div>
+        </div>
+        <p class="method-short"><%= m[:short] %></p>
+        <p class="method-explain"><%= m[:explain] %></p>
+
+        <div class="method-examples">
+          <% m[:examples].each do |ex| %>
+            <div class="method-example">
+              <span class="me-context"><%= ex[:context] %></span>
+              <code class="me-code"><%= ex[:code] %></code>
+              <% if ex[:learns].present? %>
+                <span class="me-learns">→ <%= ex[:learns] %></span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="method-rule"><%= m[:rule] %></div>
+      </div>
+    <% end %>
+  <% end %>
+
+  <!-- Comparison table -->
+  <div class="methods-table-section">
+    <h2>📋 Tableau récapitulatif</h2>
+    <div class="methods-table-wrap">
+      <table class="methods-table">
+        <thead>
+          <tr>
+            <th>Méthode</th>
+            <th>Phase</th>
+            <th>Fait quoi</th>
+            <th>sklearn</th>
+            <th>keras</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>.fit()</code></td><td>🧠</td><td>Apprend des données</td><td>✅</td><td>✅</td></tr>
+          <tr><td><code>.compile()</code></td><td>🧠</td><td>Configure avant fit</td><td>❌</td><td>✅</td></tr>
+          <tr><td><code>.transform()</code></td><td>🔄</td><td>Applique la transfo</td><td>✅</td><td>❌</td></tr>
+          <tr><td><code>.fit_transform()</code></td><td>🔄</td><td>fit + transform (train only!)</td><td>✅</td><td>❌</td></tr>
+          <tr><td><code>.predict()</code></td><td>🎯</td><td>Donne la réponse</td><td>✅</td><td>✅</td></tr>
+          <tr><td><code>.predict_proba()</code></td><td>🎯</td><td>Donne la probabilité</td><td>✅</td><td>❌</td></tr>
+          <tr><td><code>.fit_predict()</code></td><td>🎯</td><td>fit + predict (clustering)</td><td>✅</td><td>❌</td></tr>
+          <tr><td><code>.score()</code></td><td>📏</td><td>Accuracy ou R²</td><td>✅</td><td>❌</td></tr>
+          <tr><td><code>.evaluate()</code></td><td>📏</td><td>Loss + métriques</td><td>❌</td><td>✅</td></tr>
+          <tr><td><code>cross_val_score()</code></td><td>📏</td><td>K-fold validation</td><td>✅</td><td>❌</td></tr>
+          <tr><td><code>.summary()</code></td><td>🔧</td><td>Architecture du réseau</td><td>❌</td><td>✅</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

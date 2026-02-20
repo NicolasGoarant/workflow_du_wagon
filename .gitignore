@@ -1,0 +1,6 @@
+/log/*
+/tmp/*
+/db/*.sqlite3
+/storage/*
+/node_modules
+.env

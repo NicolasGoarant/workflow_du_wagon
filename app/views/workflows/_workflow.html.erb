@@ -1,0 +1,111 @@
+<div class="workflow-content">
+
+  <!-- Section Header -->
+  <div class="section-header">
+    <div class="section-title">
+      <span class="section-icon"><%= workflow[:icon] %></span>
+      <%= workflow[:title] %>
+      <span class="badge badge-<%= workflow[:badge_color] %>"><%= workflow[:badge] %></span>
+    </div>
+    <p class="section-subtitle"><%= workflow[:subtitle] %></p>
+  </div>
+
+  <!-- Analogy -->
+  <div class="analogy">
+    <h4><%= workflow[:analogy_title] %></h4>
+    <p><%= workflow[:analogy_text] %></p>
+  </div>
+
+  <!-- Steps -->
+  <div class="flow">
+    <% workflow[:steps].each_with_index do |step, i| %>
+      <div class="flow-step step-<%= workflow[:badge_color] %>">
+        <span class="step-num"><%= i + 1 %></span>
+        <h3><%= step[:title] %></h3>
+        <div class="explain"><%= step[:explain] %></div>
+
+        <% if step[:code_block].present? %>
+          <div class="step-code">
+            <pre><code class="language-python"><%= step[:code_block].strip %></code></pre>
+          </div>
+        <% end %>
+
+        <% if step[:output].present? && step[:output].strip.length > 0 %>
+          <div class="step-output">
+            <div class="step-output-label">▸ Output</div>
+            <pre><%= step[:output].strip %></pre>
+          </div>
+        <% end %>
+
+        <% if step[:code_notes].present? %>
+          <div class="code-notes">
+            <% step[:code_notes].each do |note| %>
+              <div class="code-note">
+                <span class="code-note-marker"><%= note[:marker] %></span>
+                <span class="code-note-text"><%= note[:text].html_safe %></span>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <%# === PLOTS === %>
+        <% plot_ids = defined?(STEP_PLOTS) && STEP_PLOTS[[workflow[:slug], i]] %>
+        <% if plot_ids %>
+          <% plot_ids.each do |pid| %>
+            <%= render "shared/plot", plot_id: pid %>
+          <% end %>
+        <% end %>
+
+      </div>
+
+      <% unless i == workflow[:steps].length - 1 %>
+        <div class="flow-arrow"></div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- Tips -->
+  <% if workflow[:tips] %>
+    <div class="tips-box">
+      <h4><%= workflow[:tips][:title] %></h4>
+      <ul>
+        <% workflow[:tips][:items].each do |item| %>
+          <li><%= item %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <!-- Full code example -->
+  <% if workflow[:code_content].present? %>
+    <div class="code-example">
+      <div class="code-header">
+        <div class="code-dots"><i></i><i></i><i></i></div>
+        <span><%= workflow[:code_filename] %></span>
+        <div class="code-actions">
+          <button class="copy-btn" onclick="copyCode('<%= workflow[:slug] %>')">Copier</button>
+        </div>
+      </div>
+      <div class="code-body">
+        <pre><code class="language-python" id="code-<%= workflow[:slug] %>"><%= workflow[:code_content].strip %></code></pre>
+      </div>
+    </div>
+  <% end %>
+
+</div>
+
+<script>
+  document.querySelectorAll('.workflow-content pre code').forEach(el => {
+    if (typeof hljs !== 'undefined') hljs.highlightElement(el);
+  });
+
+  function copyCode(slug) {
+    const code = document.getElementById('code-' + slug);
+    if (!code) return;
+    navigator.clipboard.writeText(code.textContent).then(() => {
+      const btn = event.target;
+      btn.textContent = '✓ Copié';
+      setTimeout(() => btn.textContent = 'Copier', 2000);
+    });
+  }
+</script>

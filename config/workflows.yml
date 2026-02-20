@@ -1,0 +1,916 @@
+- slug: preprocessing
+  title: Data Preprocessing
+  icon: "🧹"
+  badge: Préparation
+  badge_color: green
+  subtitle: Nettoyer et transformer les données brutes en un dataset exploitable par un modèle
+  analogy_title: "L'analogie du chef cuisinier"
+  analogy_text: "Le preprocessing, c'est comme la mise en place en cuisine. Avant de cuisiner (entraîner un modèle), il faut laver les légumes (supprimer les doublons), retirer les parties abîmées (gérer les valeurs manquantes), tout couper à la même taille (scaling) et séparer les ingrédients par type (encodage). Si tu sautes cette étape, le plat sera raté, même avec la meilleure recette."
+  steps:
+    - title: Charger et inspecter les données
+      code_hint: "pd.read_csv(), df.shape, df.dtypes, df.info(), df.describe()"
+      explain: "Imagine que tu reçois un carton rempli de fiches. La première chose à faire, c'est de compter combien il y en a, vérifier qu'elles sont lisibles, et comprendre ce que chaque colonne représente."
+    - title: Gérer les valeurs manquantes
+      code_hint: "df.isnull().sum() → dropna ou SimpleImputer(strategy='median')"
+      explain: "Des cases vides dans un tableur. Si 5 % de la colonne 'âge' est vide, on remplit avec la médiane. Si 80 % est vide, on supprime la colonne. Ne pas inventer de l'information, mais combler intelligemment les trous."
+    - title: Supprimer les doublons
+      code_hint: "df.duplicated().sum() → df.drop_duplicates()"
+      explain: "Si le même client apparaît 3 fois, le modèle pensera que ce profil est 3× plus fréquent. C'est comme compter 3 fois le même bulletin de vote."
+    - title: Détecter et traiter les outliers
+      code_hint: "IQR : [Q1 − 1.5×IQR, Q3 + 1.5×IQR] ou Z-score > 3"
+      explain: "Un élève qui mesure '17 mètres' est clairement une erreur de saisie. Un outlier risque de fausser le modèle — on le corrige ou on le supprime."
+    - title: Encoder les variables catégorielles
+      code_hint: "Ordinales → OrdinalEncoder | Nominales → OneHotEncoder"
+      explain: "Un modèle ne comprend que les chiffres. 'Paris=1, Lyon=2, Marseille=3' impliquerait un ordre inexistant. Le One-Hot crée une colonne par catégorie pour éviter ce piège."
+    - title: Feature Engineering
+      code_hint: "Ratios, interactions, extraction datetime, PolynomialFeatures"
+      explain: "Si tu as la date de naissance, crée une colonne 'âge'. 'Prix au m²' = prix/surface est plus informatif que le prix seul. L'art de donner au modèle des indices plus faciles à exploiter."
+    - title: Scaling / Normalisation
+      code_hint: "StandardScaler (μ=0, σ=1) | MinMaxScaler [0,1] | RobustScaler"
+      explain: "Si 'revenu' va de 15K à 150K et 'âge' de 18 à 80, le modèle pensera que le revenu est plus important — simplement parce que les nombres sont plus grands. Le scaling remet tout à la même échelle. Indispensable pour KNN, SVM, réseaux de neurones. Les arbres s'en fichent."
+    - title: Train / Test Split
+      code_hint: "train_test_split(X, y, test_size=0.3, random_state=42)"
+      explain: "Séparer les questions d'un examen en deux paquets : un pour s'entraîner, un pour l'évaluation finale. Règle d'or : TOUJOURS splitter AVANT le scaling, sinon tu 'triches' en utilisant de l'info du test set."
+  tips:
+    title: "⚠️ Pièges courants"
+    items:
+      - "Ne JAMAIS fit le scaler sur le test set → fit_transform() sur train, transform() sur test"
+      - "OneHotEncoder peut exploser la dimensionalité (100 villes = 100 colonnes)"
+      - "Les arbres de décision n'ont PAS besoin de scaling"
+      - "Vérifier les types : un 'code postal' numérique est en réalité catégoriel"
+  code_filename: preprocessing_complet.py
+  code_content: |
+    import pandas as pd
+    from sklearn.model_selection import train_test_split
+    from sklearn.impute import SimpleImputer
+    from sklearn.preprocessing import StandardScaler, OneHotEncoder
+    from sklearn.compose import ColumnTransformer
+    from sklearn.pipeline import Pipeline
+
+    # 1. Charger
+    df = pd.read_csv("housing.csv")
+    print(df.info(), df.describe())
+
+    # 2. Valeurs manquantes
+    print(df.isnull().sum())
+
+    # 3. Doublons
+    df = df.drop_duplicates()
+
+    # 4. Séparer features et target
+    X = df.drop(columns=["price"])
+    y = df["price"]
+
+    # 5. Identifier les types de colonnes
+    num_cols = X.select_dtypes(include="number").columns.tolist()
+    cat_cols = X.select_dtypes(include="object").columns.tolist()
+
+    # 6. Sous-pipelines
+    num_pipe = Pipeline([
+        ("imputer", SimpleImputer(strategy="median")),
+        ("scaler",  StandardScaler())
+    ])
+    cat_pipe = Pipeline([
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("encoder", OneHotEncoder(handle_unknown="ignore"))
+    ])
+    preprocessor = ColumnTransformer([
+        ("num", num_pipe, num_cols),
+        ("cat", cat_pipe, cat_cols)
+    ])
+
+    # 7. Split AVANT le preprocessing
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+    # 8. Fit sur train, transform sur test
+    X_train_processed = preprocessor.fit_transform(X_train)
+    X_test_processed  = preprocessor.transform(X_test)
+    print(f"Train: {X_train_processed.shape}, Test: {X_test_processed.shape}")
+
+- slug: eda
+  title: Exploratory Data Analysis
+  icon: "📊"
+  badge: Analyse
+  badge_color: cyan
+  subtitle: Comprendre la structure, les distributions et les relations dans les données
+  analogy_title: "L'analogie du détective"
+  analogy_text: "L'EDA, c'est l'enquête préliminaire avant de résoudre l'affaire. Tu ne lances pas de modèle à l'aveugle : tu regardes les indices (distributions), tu cherches des corrélations (qui connaît qui ?), tu repères les anomalies (le suspect aux chaussures boueuses). Plus ton enquête est minutieuse, plus ton modèle sera pertinent."
+  steps:
+    - title: Vue d'ensemble
+      code_hint: "df.shape, df.dtypes, df.describe(), df.info()"
+      explain: "Combien de lignes et colonnes ? Quels types ? Un âge max à 999 ? C'est le premier coup d'œil qui donne la température du dataset."
+    - title: Analyse univariée
+      code_hint: "Histogrammes, boxplots, value_counts()"
+      explain: "Tu regardes chaque variable seule. Les prix suivent-ils une cloche ou une longue traîne ? Une catégorie = 90 % des données ? Ça conditionne tes choix futurs."
+    - title: Analyse bivariée
+      code_hint: "Scatter plots, boxplots groupés, sns.pairplot()"
+      explain: "Les relations entre variables. Surface et prix bougent-ils ensemble ? Les maisons avec piscine sont-elles plus chères ? C'est ici que tu trouves les features à fort impact."
+    - title: Matrice de corrélation
+      code_hint: "df.corr() + sns.heatmap(annot=True)"
+      explain: "La carte thermique des relations. Corrélation > 0.8 entre deux features = multicolinéarité, tu peux en supprimer une. Regarde aussi la corrélation avec la target."
+    - title: Analyse des valeurs manquantes
+      code_hint: "msno.matrix(df) — Patterns MCAR, MAR, MNAR"
+      explain: "Si les revenus manquent uniquement pour les < 18 ans, ce n'est pas aléatoire. Le type de 'manquance' détermine comment les traiter."
+    - title: Synthèse et hypothèses
+      code_hint: "Formuler insights et stratégie de modélisation"
+      explain: "Le 'rapport d'enquête' : les 3-4 features les plus liées à la target, les transformations nécessaires, les modèles à tester. Un bon EDA = 50 % du travail."
+  tips:
+    title: "📦 Toolbox visualisation"
+    items:
+      - "matplotlib : contrôle fin, base de tout"
+      - "seaborn : statistiques visuelles élégantes"
+      - "plotly : interactif, idéal pour présentation"
+      - "ydata-profiling : EDA automatisé en 1 ligne"
+  code_filename: eda_complet.py
+  code_content: |
+    import pandas as pd
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+
+    df = pd.read_csv("housing.csv")
+
+    # 1. Vue d'ensemble
+    print(df.shape)
+    print(df.describe())
+
+    # 2. Distributions numériques
+    df.hist(figsize=(14, 10), bins=30)
+    plt.tight_layout()
+    plt.show()
+
+    # 3. Matrice de corrélation
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(df.corr(numeric_only=True), annot=True, cmap="coolwarm", fmt=".2f")
+    plt.title("Matrice de corrélation")
+    plt.show()
+
+    # 4. Relation feature vs target
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+    for i, col in enumerate(["surface", "rooms", "age"]):
+        axes[i].scatter(df[col], df["price"], alpha=0.3)
+        axes[i].set_xlabel(col)
+        axes[i].set_ylabel("price")
+    plt.tight_layout()
+    plt.show()
+
+    # 5. Top corrélations
+    print(df.corr(numeric_only=True)["price"].sort_values(ascending=False))
+
+- slug: linreg
+  title: Régression Linéaire
+  icon: "📈"
+  badge: Supervisé
+  badge_color: accent
+  subtitle: "Prédire une valeur continue — y = β₀ + β₁x₁ + ... + βₙxₙ"
+  analogy_title: "L'analogie du fil tendu"
+  analogy_text: "Imagine un nuage de points (surface vs prix). La régression linéaire trouve le fil tendu qui passe au plus près de tous les points. Ce fil te permet de prédire : 'pour 80 m², le prix devrait être autour de X'. Si les points forment un nuage allongé, la droite fonctionnera. S'ils forment un nuage rond ou une courbe, il faudra un modèle plus complexe."
+  steps:
+    - title: Vérifier les hypothèses
+      code_hint: "Linéarité, homoscédasticité, normalité résidus, VIF < 5"
+      explain: "La régression a des 'conditions d'utilisation'. Si la relation X-y est une courbe, le modèle sera mauvais. C'est comme utiliser une règle pour mesurer un terrain vallonné : ça marche si le terrain est plat."
+    - title: Préparer les features
+      code_hint: "StandardScaler pour comparer les coefficients. PolynomialFeatures si courbe."
+      explain: "Le scaling n'est pas obligatoire pour fonctionner, mais indispensable pour comparer l'importance des coefficients entre eux."
+    - title: Entraîner le modèle
+      code_hint: "LinearRegression().fit(X_train, y_train) — Minimise OLS"
+      explain: "Le modèle cherche la droite qui minimise la distance verticale entre chaque point et la droite, élevée au carré. Résultat : des coefficients (pente par feature) et un intercept."
+    - title: "Régulariser si overfitting"
+      code_hint: "Ridge (L2) réduit les coefficients | Lasso (L1) les met à zéro"
+      explain: "Ridge = petits poids attachés aux coefficients pour les empêcher de devenir trop grands. Lasso = un filtre qui ne garde que les variables vraiment utiles en mettant les autres à zéro."
+    - title: Évaluer avec cross-validation
+      code_hint: "cross_val_score(model, X, y, cv=5, scoring='r2')"
+      explain: "On découpe les données en 5 morceaux, on entraîne 5 fois en laissant un morceau de côté à chaque fois. Score plus fiable qu'un seul split."
+  tips:
+    title: "📏 Métriques"
+    items:
+      - "R² : % de variance expliquée. 0.85 = le modèle explique 85 % des variations"
+      - "RMSE : erreur moyenne. Si RMSE = 15K€ pour des prix, le modèle se trompe de ~15K€"
+      - "MAE : erreur absolue moyenne, plus robuste aux outliers"
+  code_filename: linear_regression.py
+  code_content: |
+    import numpy as np
+    from sklearn.linear_model import LinearRegression, Ridge
+    from sklearn.model_selection import train_test_split, cross_val_score
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.metrics import mean_squared_error, r2_score
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+    # Scaling
+    scaler = StandardScaler()
+    X_train_sc = scaler.fit_transform(X_train)
+    X_test_sc  = scaler.transform(X_test)
+
+    # Modèle simple
+    model = LinearRegression()
+    model.fit(X_train_sc, y_train)
+
+    y_pred = model.predict(X_test_sc)
+    print(f"R² train : {model.score(X_train_sc, y_train):.3f}")
+    print(f"R² test  : {r2_score(y_test, y_pred):.3f}")
+    print(f"RMSE     : {np.sqrt(mean_squared_error(y_test, y_pred)):.0f}")
+
+    # Cross-validation
+    cv = cross_val_score(model, X_train_sc, y_train, cv=5, scoring="r2")
+    print(f"CV R² : {cv.mean():.3f} ± {cv.std():.3f}")
+
+    # Si overfitting → Ridge
+    ridge = Ridge(alpha=1.0)
+    ridge.fit(X_train_sc, y_train)
+    print(f"Ridge R² test : {ridge.score(X_test_sc, y_test):.3f}")
+
+- slug: logreg
+  title: Régression Logistique
+  icon: "🎯"
+  badge: Classification
+  badge_color: accent
+  subtitle: "Prédire une catégorie (oui/non, spam/pas spam) via une probabilité"
+  analogy_title: "L'analogie du thermomètre de confiance"
+  analogy_text: "Un médecin doit décider si un patient est malade. La régression logistique prend les symptômes et sort une probabilité entre 0 % et 100 %. Au-delà du seuil (50 % par défaut), elle dit 'malade'. Mais tu peux ajuster : si rater un malade est grave, baisse le seuil à 30 % (plus de faux positifs, moins de malades ratés)."
+  steps:
+    - title: Vérifier le contexte
+      code_hint: "y.value_counts(normalize=True) — Classes déséquilibrées ?"
+      explain: "Si 95 % de 'pas spam' et 5 % de 'spam', un modèle qui dit toujours 'pas spam' a 95 % d'accuracy. Trompeur ! Utiliser class_weight='balanced' et évaluer avec precision/recall."
+    - title: Préparer les données
+      code_hint: "StandardScaler — la sigmoïde est sensible à l'échelle"
+      explain: "La logistique passe les données par une fonction en S (sigmoïde) qui compresse entre 0 et 1. Si une feature a des valeurs 100× plus grandes, elle domine la décision."
+    - title: Entraîner
+      code_hint: "LogisticRegression(C=1.0, max_iter=1000)"
+      explain: "C contrôle le biais/variance. C grand = colle aux données (overfitting). C petit = plus laxiste mais généralise mieux. Un curseur entre 'apprendre par cœur' et 'comprendre la tendance'."
+    - title: Ajuster le seuil de décision
+      code_hint: "model.predict_proba(X) — seuil par défaut 0.5"
+      explain: "La décision métier clé. Fraude : seuil bas (0.3) pour ne rater personne. Filtre spam : seuil haut (0.7) pour éviter de bloquer un vrai mail."
+    - title: Évaluer
+      code_hint: "confusion_matrix(), classification_report(), ROC + AUC"
+      explain: "La matrice de confusion montre les 4 cas (TP, FP, TN, FN). L'AUC résume la performance à tous les seuils : 1.0 = parfait, 0.5 = pile ou face."
+  tips:
+    title: "📏 Métriques de classification"
+    items:
+      - "Accuracy : % bonnes prédictions — trompeuse si classes déséquilibrées"
+      - "Precision : parmi les prédits positifs, combien le sont vraiment ?"
+      - "Recall : parmi les vrais positifs, combien sont détectés ?"
+      - "F1-Score : moyenne harmonique precision/recall"
+      - "AUC-ROC : indépendant du seuil, 1 = parfait"
+  code_filename: logistic_regression.py
+  code_content: |
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve
+    import matplotlib.pyplot as plt
+
+    model = LogisticRegression(C=1.0, max_iter=1000, class_weight="balanced")
+    model.fit(X_train_sc, y_train)
+
+    y_pred = model.predict(X_test_sc)
+    y_proba = model.predict_proba(X_test_sc)[:, 1]
+
+    print(confusion_matrix(y_test, y_pred))
+    print(classification_report(y_test, y_pred))
+
+    # AUC-ROC
+    auc = roc_auc_score(y_test, y_proba)
+    fpr, tpr, _ = roc_curve(y_test, y_proba)
+    plt.plot(fpr, tpr, label=f"AUC = {auc:.2f}")
+    plt.plot([0, 1], [0, 1], "k--")
+    plt.xlabel("Faux positifs"); plt.ylabel("Vrais positifs")
+    plt.legend(); plt.show()
+
+    # Seuil custom (ex: détection fraude)
+    y_pred_03 = (y_proba >= 0.3).astype(int)
+    print("Seuil 0.3 :", classification_report(y_test, y_pred_03))
+
+- slug: trees
+  title: "Arbres & Random Forest"
+  icon: "🌳"
+  badge: Supervisé
+  badge_color: green
+  subtitle: "Prédire en posant des questions successives — comme un jeu de 'Qui est-ce ?'"
+  analogy_title: "L'analogie du jeu 'Qui est-ce ?'"
+  analogy_text: "Un arbre de décision pose la question qui élimine le plus de candidats à chaque étape. 'Prix > 200K ? → Oui. Surface > 80m² ? → Non. Jardin ? → Oui → Quartier résidentiel.' Le Random Forest demande l'avis à 100 joueurs avec chacun un sous-ensemble différent de questions, puis prend le vote majoritaire. Plus fiable qu'un seul joueur."
+  steps:
+    - title: "Avantages des arbres"
+      code_hint: "Pas de scaling. Gèrent catégorielles. Interprétables. Non-linéaires."
+      explain: "Un des rares modèles montrables à un non-technicien : 'si le client a > 3 achats ET un panier > 50 €, il reviendra à 80 %'. Pas de scaling car l'arbre fait des comparaisons (> ou ≤), pas des calculs de distance."
+    - title: "Decision Tree simple"
+      code_hint: "DecisionTreeClassifier(max_depth=5, min_samples_leaf=10)"
+      explain: "Sans contrainte, l'arbre grandit jusqu'à une feuille par observation — overfitting massif. C'est comme créer une règle pour chaque cas particulier au lieu de comprendre le pattern. max_depth et min_samples_leaf sont les gardes-fous."
+    - title: "Random Forest (Bagging)"
+      code_hint: "RandomForestClassifier(n_estimators=100, max_features='sqrt')"
+      explain: "100 arbres, chacun sur un échantillon aléatoire + sous-ensemble de features. Leur vote collectif est bien plus fiable qu'un arbre seul. C'est la 'sagesse de la foule' appliquée au ML."
+    - title: "Feature Importance"
+      code_hint: "model.feature_importances_ → barplot"
+      explain: "Combien chaque feature contribue à réduire l'erreur dans les splits. Attention : deux features corrélées se partagent l'importance, ce qui peut être trompeur."
+  tips:
+    title: "🔑 Bagging vs Boosting"
+    items:
+      - "Bagging (Random Forest) : arbres indépendants en parallèle → réduit la variance"
+      - "Boosting : arbres séquentiels qui corrigent les erreurs → réduit le biais"
+      - "RF : moins de risque d'overfitting, plus robuste"
+      - "Boosting : souvent plus performant, plus sensible aux hyperparamètres"
+  code_filename: random_forest.py
+  code_content: |
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import cross_val_score, RandomizedSearchCV
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # Random Forest (pas de scaling !)
+    rf = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
+    rf.fit(X_train, y_train)
+    print(f"Train: {rf.score(X_train, y_train):.3f}, Test: {rf.score(X_test, y_test):.3f}")
+
+    # Cross-validation
+    cv = cross_val_score(rf, X_train, y_train, cv=5)
+    print(f"CV accuracy : {cv.mean():.3f} ± {cv.std():.3f}")
+
+    # Tuning
+    params = {
+        "n_estimators": [50, 100, 200, 300],
+        "max_depth": [5, 10, 20, None],
+        "min_samples_leaf": [1, 5, 10],
+        "max_features": ["sqrt", "log2"]
+    }
+    search = RandomizedSearchCV(rf, params, n_iter=20, cv=5, random_state=42)
+    search.fit(X_train, y_train)
+    print(f"Best params : {search.best_params_}")
+    print(f"Best score  : {search.best_score_:.3f}")
+
+    # Feature importance
+    importances = search.best_estimator_.feature_importances_
+    idx = np.argsort(importances)[-10:]
+    plt.barh(range(10), importances[idx])
+    plt.yticks(range(10), [feature_names[i] for i in idx])
+    plt.title("Top 10 Feature Importances")
+    plt.show()
+
+- slug: boosting
+  title: "Gradient Boosting / XGBoost"
+  icon: "🚀"
+  badge: Supervisé
+  badge_color: orange
+  subtitle: "Des arbres qui apprennent de leurs erreurs, un par un"
+  analogy_title: "L'analogie des couches de peinture"
+  analogy_text: "Tu peins un portrait. La première couche est grossière : les grandes formes. La deuxième corrige : les ombres, les proportions. Chaque couche affine un peu plus. Le Gradient Boosting fonctionne pareil : chaque nouvel arbre se concentre sur les erreurs du précédent. 100 petits arbres 'moyens' qui se corrigent donnent un résultat souvent meilleur qu'un seul gros arbre. C'est LE modèle roi pour les données tabulaires."
+  steps:
+    - title: "Choisir l'implémentation"
+      code_hint: "XGBClassifier (rapide) ou LGBMClassifier (très gros datasets)"
+      explain: "Le sklearn GradientBoosting est pédagogique mais lent. XGBoost est le go-to de Kaggle. LightGBM est plus rapide sur des millions de lignes grâce à sa croissance leaf-wise."
+    - title: "Hyperparamètres clés"
+      code_hint: "learning_rate (0.01–0.3), n_estimators (100–1000), max_depth (3–8)"
+      explain: "learning_rate = à quel point chaque arbre 'ose' corriger. 0.01 = prudent (lent mais fin). 0.3 = agressif (rapide mais risque). Règle d'or : réduire le learning rate ET augmenter le nombre d'arbres."
+    - title: "Early Stopping"
+      code_hint: "early_stopping_rounds=50, eval_set=[(X_val, y_val)]"
+      explain: "Plutôt que deviner le bon nombre d'arbres, on surveille le score sur un validation set et on arrête quand il stagne. Comme arrêter de cuire un gâteau quand il est doré, au lieu de deviner les minutes."
+    - title: "Optimiser"
+      code_hint: "RandomizedSearchCV (large) puis GridSearchCV (affinage)"
+      explain: "Avec tant d'hyperparamètres, tester toutes les combinaisons prendrait des jours. D'abord un RandomizedSearch qui pioche 50 combinaisons, puis un GridSearch fin autour de la meilleure zone."
+  tips:
+    title: "💡 Best practices"
+    items:
+      - "Commencer avec learning_rate=0.1, n_estimators=100, puis affiner"
+      - "XGBoost/LightGBM gèrent les NaN nativement"
+      - "Souvent le meilleur modèle pour données tabulaires structurées"
+  code_filename: xgboost_workflow.py
+  code_content: |
+    from xgboost import XGBClassifier
+    from sklearn.model_selection import train_test_split, RandomizedSearchCV
+    from sklearn.metrics import classification_report
+
+    # Split avec validation set pour early stopping
+    X_tr, X_val, y_tr, y_val = train_test_split(X_train, y_train, test_size=0.2)
+
+    xgb = XGBClassifier(
+        n_estimators=500, learning_rate=0.05, max_depth=6,
+        subsample=0.8, colsample_bytree=0.8,
+        early_stopping_rounds=50, eval_metric="logloss", random_state=42
+    )
+    xgb.fit(X_tr, y_tr, eval_set=[(X_val, y_val)], verbose=20)
+    print(f"Best round : {xgb.best_iteration}")
+    print(classification_report(y_test, xgb.predict(X_test)))
+
+    # Tuning
+    params = {
+        "max_depth": [3, 5, 7], "learning_rate": [0.01, 0.05, 0.1],
+        "subsample": [0.6, 0.8, 1.0], "n_estimators": [100, 200, 300]
+    }
+    search = RandomizedSearchCV(XGBClassifier(), params, n_iter=30, cv=5, scoring="f1")
+    search.fit(X_train, y_train)
+    print(f"Best F1 : {search.best_score_:.3f}")
+
+- slug: knn
+  title: K-Nearest Neighbors
+  icon: "🔵"
+  badge: Supervisé
+  badge_color: accent
+  subtitle: "Prédire en regardant les voisins les plus proches"
+  analogy_title: "L'analogie de l'immobilier"
+  analogy_text: "Tu veux estimer le prix de ta maison. Tu regardes les 5 maisons les plus similaires vendues récemment et tu fais la moyenne. C'est exactement KNN. La 'similarité' est la distance euclidienne. K=5 → 5 voisins. K=1 → très sensible au bruit. K=50 → trop flou."
+  steps:
+    - title: "⚠️ Scaling OBLIGATOIRE"
+      code_hint: "StandardScaler — sinon les features à grande échelle dominent"
+      explain: "Si 'revenu' va de 20K à 200K et 'âge' de 18 à 80, la distance sera quasi entièrement déterminée par le revenu. C'est comme mesurer la distance en comptant km ET cm : les km écrasent tout."
+    - title: "Choisir K"
+      code_hint: "K petit = overfitting. K grand = underfitting. K impair pour binaire."
+      explain: "K=1 : 'je copie mon voisin le plus proche' → si c'est un outlier, catastrophe. K=100 : on lisse tellement que les frontières disparaissent. L'optimum est typiquement entre 3 et 15."
+    - title: "Trouver le K optimal"
+      code_hint: "Boucle K=1 à 20, plot train/test score vs K"
+      explain: "Le meilleur K est là où le score test est maximal. C'est le point d'équilibre entre trop simple et trop complexe."
+  tips:
+    title: "⚠️ Limites"
+    items:
+      - "Lent en prédiction (calcule toutes les distances à chaque fois)"
+      - "Malédiction de la dimensionalité : mauvais en haute dimension"
+      - "Pas de vrai 'modèle' — lazy learner, stocke tout le dataset"
+      - "Bon pour petits datasets avec peu de features"
+  code_filename: knn_workflow.py
+  code_content: |
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn.preprocessing import StandardScaler
+    import matplotlib.pyplot as plt
+
+    scaler = StandardScaler()
+    X_train_sc = scaler.fit_transform(X_train)
+    X_test_sc  = scaler.transform(X_test)
+
+    # Trouver le meilleur K
+    train_scores, test_scores = [], []
+    k_range = range(1, 21)
+    for k in k_range:
+        knn = KNeighborsClassifier(n_neighbors=k)
+        knn.fit(X_train_sc, y_train)
+        train_scores.append(knn.score(X_train_sc, y_train))
+        test_scores.append(knn.score(X_test_sc, y_test))
+
+    plt.plot(k_range, train_scores, label="Train")
+    plt.plot(k_range, test_scores, label="Test")
+    plt.xlabel("K"); plt.ylabel("Accuracy"); plt.legend()
+    plt.title("KNN — Choix de K"); plt.show()
+
+    best_k = k_range[test_scores.index(max(test_scores))]
+    print(f"Meilleur K = {best_k}, accuracy = {max(test_scores):.3f}")
+
+- slug: svm
+  title: Support Vector Machine
+  icon: "🔲"
+  badge: Supervisé
+  badge_color: pink
+  subtitle: "Trouver la frontière optimale entre les classes"
+  analogy_title: "L'analogie de la route entre deux villages"
+  analogy_text: "Deux villages (classes) séparés par un champ. SVM trace une route (hyperplan) aussi large que possible entre les deux, pour que les maisons les plus proches (vecteurs de support) soient le plus loin possible. Si les villages ne sont pas séparables par une route droite ? Le kernel trick projette dans un espace supérieur — comme monter en hélicoptère et voir la séparation d'en haut."
+  steps:
+    - title: "⚠️ Scaling OBLIGATOIRE"
+      code_hint: "StandardScaler essentiel"
+      explain: "SVM très sensible à l'échelle des features."
+    - title: "Choisir le kernel"
+      code_hint: "Linéaire si séparable, RBF sinon"
+      explain: "Le kernel linéaire est rapide et interprétable. Le RBF projette dans un espace supérieur pour les cas non-linéaires."
+    - title: "Comprendre C et gamma"
+      code_hint: "C = tolérance erreurs. gamma = portée d'influence."
+      explain: "C grand = frontière précise qui colle aux données (overfitting). C petit = plus douce, tolère des erreurs. gamma grand = influence locale (frontière complexe). gamma petit = influence large (frontière lisse)."
+    - title: "GridSearch sur C et gamma"
+      code_hint: "GridSearchCV sur C=[0.1, 1, 10, 100] et gamma"
+      explain: "Les deux paramètres interagissent fortement — il faut tester des combinaisons."
+  tips:
+    title: "💡 Quand utiliser SVM ?"
+    items:
+      - "Efficace en haute dimension (n_features > n_samples)"
+      - "Bon pour petits/moyens datasets"
+      - "Lent sur gros datasets (> 10K) → préférer LinearSVC"
+  code_filename: svm_workflow.py
+  code_content: |
+    from sklearn.svm import SVC
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.model_selection import GridSearchCV
+    from sklearn.metrics import classification_report
+
+    scaler = StandardScaler()
+    X_train_sc = scaler.fit_transform(X_train)
+    X_test_sc  = scaler.transform(X_test)
+
+    # Grid Search
+    params = {
+        "C": [0.1, 1, 10, 100],
+        "gamma": ["scale", "auto", 0.01, 0.1],
+        "kernel": ["rbf", "linear"]
+    }
+    grid = GridSearchCV(SVC(), params, cv=5, scoring="accuracy", n_jobs=-1)
+    grid.fit(X_train_sc, y_train)
+
+    print(f"Best params : {grid.best_params_}")
+    print(f"Best CV     : {grid.best_score_:.3f}")
+    print(classification_report(y_test, grid.predict(X_test_sc)))
+
+- slug: kmeans
+  title: K-Means Clustering
+  icon: "🔮"
+  badge: Non-supervisé
+  badge_color: cyan
+  subtitle: "Regrouper automatiquement les données similaires — sans étiquettes"
+  analogy_title: "L'analogie des boules de pétanque"
+  analogy_text: "Des boules sur un terrain — tu veux identifier les groupes naturels. Tu places K 'cochonnets' (centroïdes) au hasard. Chaque boule se rattache au cochonnet le plus proche. Puis tu déplaces chaque cochonnet au centre de ses boules. Et tu recommences. Au bout de quelques itérations, les groupes sont stables. La seule question : combien de cochonnets ?"
+  steps:
+    - title: "Scaling OBLIGATOIRE"
+      code_hint: "StandardScaler — distance euclidienne"
+      explain: "K-Means utilise la distance euclidienne — le scaling est indispensable."
+    - title: "Choisir K : coude + silhouette"
+      code_hint: "Plot inertia vs K (coude) et silhouette_score vs K (max)"
+      explain: "L'inertia diminue toujours quand K augmente. Le 'coude' est où ajouter un cluster n'améliore plus beaucoup. Le silhouette score mesure si chaque point est bien dans son cluster (-1 à 1)."
+    - title: "Analyser les clusters"
+      code_hint: "df.groupby('cluster').mean() — Nommer les clusters"
+      explain: "L'algo donne des numéros. C'est à toi de comprendre : 'cluster 0 = revenu élevé + peu d'achats = riches inactifs'. C'est là que le data scientist apporte la valeur business."
+  tips:
+    title: "⚠️ Limites"
+    items:
+      - "Assume des clusters sphériques de taille similaire"
+      - "Sensible à l'initialisation → n_init=10 par défaut"
+      - "Formes complexes → DBSCAN (pas besoin de K)"
+      - "Hiérarchie → AgglomerativeClustering + dendrogramme"
+  code_filename: kmeans_workflow.py
+  code_content: |
+    from sklearn.cluster import KMeans
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.metrics import silhouette_score
+    import matplotlib.pyplot as plt
+
+    X_sc = StandardScaler().fit_transform(X)
+
+    # Coude + silhouette
+    inertias, silhouettes = [], []
+    for k in range(2, 11):
+        km = KMeans(n_clusters=k, n_init=10, random_state=42)
+        labels = km.fit_predict(X_sc)
+        inertias.append(km.inertia_)
+        silhouettes.append(silhouette_score(X_sc, labels))
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+    ax1.plot(range(2,11), inertias, "bo-"); ax1.set_title("Méthode du coude")
+    ax2.plot(range(2,11), silhouettes, "ro-"); ax2.set_title("Silhouette Score")
+    plt.show()
+
+    # Modèle final
+    km = KMeans(n_clusters=4, n_init=10, random_state=42)
+    df["cluster"] = km.fit_predict(X_sc)
+    print(df.groupby("cluster").mean(numeric_only=True).round(2))
+
+- slug: pca
+  title: "PCA — Composantes Principales"
+  icon: "🎭"
+  badge: Non-supervisé
+  badge_color: cyan
+  subtitle: "Réduire les dimensions tout en gardant l'essentiel de l'information"
+  analogy_title: "L'analogie de la photo de profil"
+  analogy_text: "Imagine une statue 3D que tu veux montrer en 2D. Si tu la photographies de face, tu perds le profil. De 3/4, tu captures l'essentiel des deux angles. La PCA fait pareil : parmi toutes les directions de tes données, elle trouve celles qui capturent le maximum de variation. 50 features → peut-être 5 composantes suffisent pour 95 % de l'info."
+  steps:
+    - title: "⚠️ Scaling OBLIGATOIRE"
+      code_hint: "StandardScaler — PCA maximise la variance"
+      explain: "Sans scaling, les features à grande échelle dominent les composantes principales."
+    - title: "Appliquer la PCA"
+      code_hint: "PCA(n_components=0.95) ou PCA(n_components=2)"
+      explain: "n_components=0.95 garde assez de composantes pour 95 % de la variance. Comme compresser une photo JPEG : tu perds un peu de détail mais l'image reste reconnaissable."
+    - title: "Interpréter"
+      code_hint: "pca.explained_variance_ratio_ et pca.components_"
+      explain: "Chaque composante est un 'cocktail' de features originales. La première explique le plus de variance, la deuxième ce qui reste, etc."
+  tips:
+    title: "💡 Cas d'usage"
+    items:
+      - "Réduire la dimensionalité avant ML (accélère, réduit overfitting)"
+      - "Visualisation de données haute dimension en 2D"
+      - "Réduire la multicolinéarité"
+      - "Compression d'images"
+  code_filename: pca_workflow.py
+  code_content: |
+    from sklearn.decomposition import PCA
+    from sklearn.preprocessing import StandardScaler
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    X_sc = StandardScaler().fit_transform(X)
+
+    # Variance cumulée
+    pca_full = PCA().fit(X_sc)
+    cumsum = np.cumsum(pca_full.explained_variance_ratio_)
+    plt.plot(cumsum, "bo-")
+    plt.axhline(y=0.95, color="r", linestyle="--", label="95 %")
+    plt.xlabel("Composantes"); plt.ylabel("Variance cumulée")
+    plt.legend(); plt.show()
+
+    # Réduction (95 % de variance)
+    pca = PCA(n_components=0.95)
+    X_pca = pca.fit_transform(X_sc)
+    print(f"{X_sc.shape[1]} features → {X_pca.shape[1]} composantes")
+
+    # Visualisation 2D
+    X_2d = PCA(n_components=2).fit_transform(X_sc)
+    plt.scatter(X_2d[:, 0], X_2d[:, 1], c=y, cmap="viridis", alpha=0.5)
+    plt.xlabel("PC1"); plt.ylabel("PC2"); plt.colorbar(); plt.show()
+
+- slug: nn
+  title: "Neural Networks (Dense)"
+  icon: "🧠"
+  badge: Deep Learning
+  badge_color: pink
+  subtitle: "Des couches de neurones qui apprennent des représentations complexes"
+  analogy_title: "L'analogie de l'entreprise"
+  analogy_text: "Un réseau de neurones, c'est une entreprise à plusieurs étages. Les données entrent à l'accueil (input). Le 1er étage détecte des patterns simples : 'client jeune', 'achète le weekend'. Le 2e combine : 'jeune + weekend = étudiant'. Le dernier prend la décision. Chaque employé (neurone) a un poids (importance). L'entraînement (backpropagation) ajuste les poids pour faire moins d'erreurs."
+  steps:
+    - title: "Préparer les données"
+      code_hint: "Scaling obligatoire. One-hot encode y si multi-classes."
+      explain: "Les poids sont initialisés petits. Si les features sont dans des échelles très différentes, certains neurones saturent et le réseau n'apprend pas."
+    - title: "Construire l'architecture"
+      code_hint: "Dense(64, 'relu') → Dense(32, 'relu') → Dense(1, 'sigmoid')"
+      explain: "ReLU : si input négatif, output = 0, sinon output = input. Simple et efficace. Dernière couche : sigmoid (binaire), softmax (multi-classes), rien (régression)."
+    - title: "Compiler : optimizer + loss"
+      code_hint: "adam + binary_crossentropy ou categorical_crossentropy"
+      explain: "Adam adapte le learning rate automatiquement. La cross-entropy pénalise fortement les prédictions 'confiantes mais fausses'."
+    - title: "Early Stopping"
+      code_hint: "EarlyStopping(patience=5, restore_best_weights=True)"
+      explain: "Sans ça, le réseau finit par apprendre par cœur. Le callback arrête quand la val_loss stagne et restaure les meilleurs poids trouvés."
+    - title: "Régulariser si overfitting"
+      code_hint: "Dropout(0.3), BatchNormalization()"
+      explain: "Dropout : on 'éteint' 30 % des neurones aléatoirement à chaque batch. Comme interdire aux bons élèves de parler pour forcer les autres à participer."
+  tips:
+    title: "🏗️ Architecture type"
+    items:
+      - "Régression : Dense(1) sans activation, loss=mse"
+      - "Classif binaire : Dense(1, sigmoid), loss=binary_crossentropy"
+      - "Multi-classes : Dense(n, softmax), loss=categorical_crossentropy"
+  code_filename: neural_network.py
+  code_content: |
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
+    from tensorflow.keras.callbacks import EarlyStopping
+    import matplotlib.pyplot as plt
+
+    model = Sequential([
+        Dense(64, activation="relu", input_shape=(X_train_sc.shape[1],)),
+        BatchNormalization(),
+        Dropout(0.3),
+        Dense(32, activation="relu"),
+        Dropout(0.2),
+        Dense(1, activation="sigmoid")
+    ])
+
+    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+
+    es = EarlyStopping(patience=5, restore_best_weights=True)
+    history = model.fit(X_train_sc, y_train, epochs=100, batch_size=32,
+                        validation_split=0.2, callbacks=[es])
+
+    # Courbes d'apprentissage
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+    ax1.plot(history.history["loss"], label="Train")
+    ax1.plot(history.history["val_loss"], label="Val"); ax1.legend()
+    ax2.plot(history.history["accuracy"], label="Train")
+    ax2.plot(history.history["val_accuracy"], label="Val"); ax2.legend()
+    plt.show()
+
+    print(f"Test accuracy : {model.evaluate(X_test_sc, y_test)[1]:.3f}")
+
+- slug: cnn
+  title: "CNN — Réseaux Convolutifs"
+  icon: "🖼️"
+  badge: Deep Learning
+  badge_color: pink
+  subtitle: "Analyser des images par détection de motifs locaux"
+  analogy_title: "L'analogie du chercheur de détails"
+  analogy_text: "Quelqu'un regarde une photo avec une loupe. La 1re couche détecte des détails simples : bords, couleurs. La suivante combine : 'bord + courbe = contour de visage'. Les couches profondes reconnaissent des concepts : 'c'est un chat'. Le filtre (kernel) est la loupe qui glisse sur l'image. Le pooling réduit la taille en gardant l'essentiel."
+  steps:
+    - title: "Préparer les images"
+      code_hint: "Resize, normaliser (÷255), data augmentation"
+      explain: "Toutes la même taille (150×150). Division par 255 pour passer de [0,255] à [0,1]. Data augmentation = variations artificielles (rotation, flip, zoom) pour augmenter le dataset et réduire l'overfitting."
+    - title: "Architecture type"
+      code_hint: "Conv2D → MaxPooling → ... → Flatten → Dense → output"
+      explain: "Chaque bloc Conv+Pool extrait des features de plus en plus abstraites. Le Flatten transforme la carte 2D en vecteur 1D pour les couches Dense. Filtres : 32 → 64 → 128."
+    - title: "Transfer Learning (peu de données)"
+      code_hint: "VGG16(weights='imagenet', include_top=False) + Dense custom"
+      explain: "Un modèle pré-entraîné sur 1.4M d'images a déjà appris bords, textures, formes. Tu greffes tes propres couches au sommet. Comme embaucher un expert et lui apprendre la spécificité de ton domaine."
+  tips:
+    title: "🏗️ Architectures pré-entraînées"
+    items:
+      - "VGG16/19 : simple, bon pour le transfer learning pédagogique"
+      - "ResNet : skip connections, plus profond"
+      - "MobileNet : léger, idéal pour mobile"
+      - "EfficientNet : excellent ratio performance/taille"
+  code_filename: cnn_transfer_learning.py
+  code_content: |
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+    from tensorflow.keras.applications import VGG16
+    from tensorflow.keras.callbacks import EarlyStopping
+    from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+    # Transfer Learning (recommandé si peu de données)
+    base = VGG16(weights="imagenet", include_top=False, input_shape=(150,150,3))
+    base.trainable = False  # geler les couches pré-entraînées
+
+    model = Sequential([
+        base,
+        Flatten(),
+        Dense(256, activation="relu"),
+        Dropout(0.5),
+        Dense(1, activation="sigmoid")
+    ])
+
+    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+
+    # Data augmentation
+    datagen = ImageDataGenerator(
+        rescale=1./255, rotation_range=20,
+        horizontal_flip=True, zoom_range=0.2, validation_split=0.2
+    )
+    train_gen = datagen.flow_from_directory(
+        "data/train", target_size=(150,150),
+        batch_size=32, class_mode="binary", subset="training"
+    )
+
+    es = EarlyStopping(patience=5, restore_best_weights=True)
+    model.fit(train_gen, epochs=30, callbacks=[es])
+
+- slug: rnn
+  title: "RNN / NLP"
+  icon: "📝"
+  badge: Deep Learning
+  badge_color: pink
+  subtitle: "Traiter du texte et des séquences en 'lisant' mot par mot"
+  analogy_title: "L'analogie du lecteur attentif"
+  analogy_text: "Un RNN lit mot par mot avec une 'mémoire de travail'. Quand il lit 'le chat a mangé la…', sa mémoire aide à prédire 'souris'. Mais le RNN simple oublie vite (comme lire un roman sans notes). Le LSTM résout ça avec un carnet de notes (cell state) et des 'portes' : quoi retenir, quoi oublier, quoi noter."
+  steps:
+    - title: "Preprocessing NLP"
+      code_hint: "Nettoyage → Tokenizer(num_words=10000) → pad_sequences(maxlen=200)"
+      explain: "Nettoyage : lowercase, supprimer ponctuation/stopwords. Tokenization : chaque mot = un nombre. Padding : compléter les phrases courtes avec des 0 pour uniformiser la longueur."
+    - title: "Embedding"
+      code_hint: "Embedding(vocab_size, 128) — vecteurs denses pour chaque mot"
+      explain: "Le nombre 42 ne dit rien au modèle. L'embedding le transforme en un vecteur de 128 dimensions capturant le 'sens'. Des mots similaires (roi/reine) auront des vecteurs proches."
+    - title: "LSTM / GRU"
+      code_hint: "Bidirectional(LSTM(64)) — lit dans les deux sens"
+      explain: "Le Bidirectional lit à l'endroit ET à l'envers. 'La banque au bord de la rivière' vs 'je vais à la banque retirer de l'argent' → le contexte des deux côtés désambiguïse."
+    - title: "Alternative : Transformers"
+      code_hint: "HuggingFace transformers — BERT fine-tuning"
+      explain: "Les Transformers regardent TOUS les mots en même temps (attention). BERT pré-entraîné + fine-tuning surpasse souvent un LSTM from scratch."
+  tips:
+    title: "🔑 Choix du modèle NLP"
+    items:
+      - "Simple RNN : séquences courtes, vanishing gradient sur les longues"
+      - "LSTM : dépendances longues, le standard"
+      - "GRU : version simplifiée du LSTM, plus rapide"
+      - "Transformers : état de l'art, mais besoin de plus de données/compute"
+  code_filename: rnn_sentiment.py
+  code_content: |
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Embedding, LSTM, Dense, Bidirectional, Dropout
+    from tensorflow.keras.preprocessing.text import Tokenizer
+    from tensorflow.keras.preprocessing.sequence import pad_sequences
+    from tensorflow.keras.callbacks import EarlyStopping
+
+    VOCAB_SIZE = 10000
+    MAX_LEN = 200
+
+    tokenizer = Tokenizer(num_words=VOCAB_SIZE, oov_token="<OOV>")
+    tokenizer.fit_on_texts(X_train_text)
+    X_train_pad = pad_sequences(tokenizer.texts_to_sequences(X_train_text), maxlen=MAX_LEN)
+    X_test_pad  = pad_sequences(tokenizer.texts_to_sequences(X_test_text), maxlen=MAX_LEN)
+
+    model = Sequential([
+        Embedding(VOCAB_SIZE, 128, input_length=MAX_LEN),
+        Bidirectional(LSTM(64)),
+        Dropout(0.3),
+        Dense(32, activation="relu"),
+        Dense(1, activation="sigmoid")
+    ])
+
+    model.compile(optimizer="adam", loss="binary_crossentropy", metrics=["accuracy"])
+    es = EarlyStopping(patience=3, restore_best_weights=True)
+    model.fit(X_train_pad, y_train, epochs=20, batch_size=64,
+              validation_split=0.2, callbacks=[es])
+
+    # Prédire un avis
+    test = ["Ce film est absolument magnifique"]
+    pad = pad_sequences(tokenizer.texts_to_sequences(test), maxlen=MAX_LEN)
+    print(f"Sentiment : {'positif' if model.predict(pad)[0][0] > 0.5 else 'négatif'}")
+
+- slug: pipeline
+  title: "Pipeline Sklearn"
+  icon: "🔧"
+  badge: Architecture
+  badge_color: green
+  subtitle: "Enchaîner preprocessing et modèle dans un objet unique et reproductible"
+  analogy_title: "L'analogie de la chaîne de montage"
+  analogy_text: "Sans pipeline, tu fais chaque étape à la main avec le risque d'oublier un fit_transform sur le test set. Une Pipeline, c'est une chaîne de montage : les données entrent, passent chaque poste dans l'ordre, et la prédiction sort. En une ligne de pipe.fit(X_train, y_train), tout est géré proprement — zéro data leakage."
+  steps:
+    - title: "Identifier les types de colonnes"
+      code_hint: "num_cols = X.select_dtypes('number'), cat_cols = X.select_dtypes('object')"
+      explain: "Numériques → imputation médiane + scaling. Catégorielles → imputation mode + encodage. Le ColumnTransformer applique le bon traitement selon le type."
+    - title: "Assembler la pipeline"
+      code_hint: "Pipeline([('preprocessing', preprocessor), ('model', RandomForest())])"
+      explain: "Un seul objet qui fait TOUT. pipe.fit() applique fit_transform aux étapes de preprocessing et fit au modèle. pipe.predict() applique transform (pas fit_transform !) puis predict."
+    - title: "GridSearch sur la pipeline"
+      code_hint: "GridSearchCV(pipe, {'model__max_depth': [3,5,10]})"
+      explain: "La notation double underscore model__max_depth accède au paramètre du modèle dans le pipe. Tu optimises preprocessing ET modèle simultanément."
+  tips:
+    title: "🔑 Avantages"
+    items:
+      - "Élimine le data leakage automatiquement"
+      - "Code reproductible et propre"
+      - "Sérialisable : joblib.dump(pipe, 'model.pkl')"
+      - "Compatible GridSearchCV pour tout optimiser"
+  code_filename: sklearn_pipeline.py
+  code_content: |
+    from sklearn.pipeline import Pipeline
+    from sklearn.compose import ColumnTransformer
+    from sklearn.impute import SimpleImputer
+    from sklearn.preprocessing import StandardScaler, OneHotEncoder
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import cross_val_score, GridSearchCV
+    import joblib
+
+    num_cols = ["age", "income", "purchase_count"]
+    cat_cols = ["city", "gender"]
+
+    num_pipe = Pipeline([("imputer", SimpleImputer(strategy="median")), ("scaler", StandardScaler())])
+    cat_pipe = Pipeline([("imputer", SimpleImputer(strategy="most_frequent")),
+                         ("encoder", OneHotEncoder(handle_unknown="ignore"))])
+
+    preprocessor = ColumnTransformer([("num", num_pipe, num_cols), ("cat", cat_pipe, cat_cols)])
+
+    pipe = Pipeline([("preprocessing", preprocessor), ("model", RandomForestClassifier(random_state=42))])
+
+    # Cross-validation
+    cv = cross_val_score(pipe, X_train, y_train, cv=5, scoring="accuracy")
+    print(f"CV : {cv.mean():.3f} ± {cv.std():.3f}")
+
+    # GridSearch (double underscore !)
+    params = {"model__n_estimators": [50, 100, 200], "model__max_depth": [5, 10, None]}
+    grid = GridSearchCV(pipe, params, cv=5, scoring="accuracy", n_jobs=-1)
+    grid.fit(X_train, y_train)
+    print(f"Best : {grid.best_score_:.3f}, Test : {grid.score(X_test, y_test):.3f}")
+
+    # Sauvegarder (preprocessing + modèle inclus)
+    joblib.dump(grid.best_estimator_, "pipeline.joblib")
+
+- slug: mlops
+  title: "MLOps — Déploiement"
+  icon: "☁️"
+  badge: Production
+  badge_color: orange
+  subtitle: "Du notebook Jupyter au modèle en production accessible par API"
+  analogy_title: "L'analogie du restaurant"
+  analogy_text: "Ton notebook, c'est la recette testée chez toi. Le déploiement, c'est ouvrir un restaurant. Il faut : emballer la recette (sauvegarder le modèle), créer le service en salle (API FastAPI), construire la cuisine pro (Docker), installer dans un lieu accessible (Cloud), mettre une enseigne (Streamlit). Et tout doit tourner même quand tu n'es pas là (CI/CD)."
+  steps:
+    - title: "Sauvegarder le modèle"
+      code_hint: "joblib.dump(pipe, 'model.joblib') ou model.save('model.h5')"
+      explain: "Sérialiser le pipeline complet (preprocessing + modèle). Attention à sauvegarder TOUT le pipeline, pas juste le modèle."
+    - title: "API avec FastAPI"
+      code_hint: "@app.get('/predict') → JSON in, prédiction out"
+      explain: "L'interface entre le monde extérieur et ton modèle. Un front, une app mobile, ou un autre service envoie des données via HTTP et reçoit la prédiction."
+    - title: "Dockeriser"
+      code_hint: "Dockerfile → image Python + dépendances + code + modèle"
+      explain: "Docker crée une 'boîte' hermétique avec ton environnement exact. Plus de 'ça marche sur ma machine mais pas sur le serveur'."
+    - title: "Déployer sur le Cloud"
+      code_hint: "GCP Cloud Run — serverless, auto-scaling"
+      explain: "Push ton image Docker, Google gère le reste. 0 utilisateurs = 0 €. 1000 requêtes simultanées = auto-scaling."
+    - title: "Front avec Streamlit"
+      code_hint: "Interface web rapide qui appelle l'API"
+      explain: "Streamlit transforme un script Python en interface web interactive en quelques lignes. Parfait pour une démo ou un MVP."
+  tips:
+    title: "📋 Checklist déploiement"
+    items:
+      - "Makefile avec commandes standardisées (install, test, deploy)"
+      - "requirements.txt avec versions figées"
+      - ".env pour les variables (jamais dans le code !)"
+      - "Tester l'API en local avant de déployer"
+      - "Modèle sur GCS plutôt que dans l'image Docker"
+  code_filename: mlops_deploy.py
+  code_content: |
+    # ===== api.py (FastAPI) =====
+    from fastapi import FastAPI
+    import joblib
+    import pandas as pd
+
+    app = FastAPI()
+    pipe = joblib.load("pipeline.joblib")
+
+    @app.get("/")
+    def root():
+        return {"status": "API is running"}
+
+    @app.get("/predict")
+    def predict(age: int, income: float, city: str):
+        X = pd.DataFrame([{"age": age, "income": income, "city": city}])
+        pred = pipe.predict(X)[0]
+        proba = pipe.predict_proba(X)[0].max()
+        return {"prediction": int(pred), "confidence": float(proba)}
+
+    # Lancer : uvicorn api:app --reload
+
+    # ===== Dockerfile =====
+    # FROM python:3.10-slim
+    # WORKDIR /app
+    # COPY requirements.txt .
+    # RUN pip install -r requirements.txt
+    # COPY . .
+    # CMD uvicorn api:app --host 0.0.0.0 --port $PORT
+
+    # ===== Appeler l'API =====
+    import requests
+    r = requests.get("https://my-api.run.app/predict",
+                     params={"age": 35, "income": 55000, "city": "Nancy"})
+    print(r.json())  # {'prediction': 1, 'confidence': 0.87}

@@ -1,0 +1,142 @@
+/* ====== METHODS PAGE ====== */
+.methods-page { max-width: 860px; margin: 0 auto; }
+
+.methods-header { text-align: center; margin-bottom: 28px; }
+.methods-header h1 { font-family: var(--font-display); font-size: 1.6rem; margin-bottom: 6px; }
+.methods-subtitle { color: var(--text-muted); font-size: 0.85rem; }
+
+/* Mental model pipeline */
+.methods-mental-model {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
+  padding: 20px 16px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.mental-phase {
+  text-align: center; padding: 12px 16px; border-radius: 10px;
+  border: 1px solid var(--border); min-width: 120px;
+}
+.mp-purple { background: rgba(168,85,247,0.1); border-color: rgba(168,85,247,0.3); }
+.mp-cyan { background: rgba(34,211,238,0.1); border-color: rgba(34,211,238,0.3); }
+.mp-green { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); }
+.mp-yellow { background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.3); }
+.mp-icon { font-size: 1.3rem; margin-bottom: 4px; }
+.mp-label { font-weight: 700; font-size: 0.85rem; color: var(--text); margin-bottom: 2px; }
+.mp-methods { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); }
+.mental-arrow { font-size: 1.2rem; color: var(--text-muted); }
+
+/* Golden rule */
+.methods-golden-rule {
+  padding: 14px 18px; background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.25); border-radius: 10px;
+  font-size: 0.85rem; color: var(--text-soft); line-height: 1.6;
+  margin-bottom: 28px;
+}
+.methods-golden-rule code {
+  font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.3);
+  padding: 1px 5px; border-radius: 3px; color: #fbbf24; font-size: 0.8rem;
+}
+
+/* Phase header */
+.methods-phase-header {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-display); font-size: 1.1rem; font-weight: 700;
+  padding: 10px 0; margin-top: 24px; margin-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+.phase-purple { color: #c084fc; border-bottom-color: rgba(168,85,247,0.4); }
+.phase-cyan { color: #22d3ee; border-bottom-color: rgba(34,211,238,0.4); }
+.phase-green { color: #4ade80; border-bottom-color: rgba(34,197,94,0.4); }
+.phase-yellow { color: #fbbf24; border-bottom-color: rgba(251,191,36,0.4); }
+.phase-gray { color: var(--text-muted); border-bottom-color: var(--border); }
+
+/* Method card */
+.method-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px 20px; margin-bottom: 12px; transition: border-color 0.2s;
+}
+.method-card:hover { border-color: var(--accent); }
+.mc-purple { border-left: 3px solid rgba(168,85,247,0.6); }
+.mc-cyan { border-left: 3px solid rgba(34,211,238,0.6); }
+.mc-green { border-left: 3px solid rgba(34,197,94,0.6); }
+.mc-yellow { border-left: 3px solid rgba(251,191,36,0.6); }
+.mc-gray { border-left: 3px solid var(--border); }
+
+.method-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 8px; flex-wrap: wrap;
+}
+.method-name {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;
+  font-weight: 700; color: var(--text); margin: 0;
+}
+.method-frameworks { display: flex; gap: 5px; }
+.fw-badge {
+  font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 2px 7px; border-radius: 4px;
+}
+.fw-sklearn { background: rgba(251,146,60,0.15); color: #fb923c; }
+.fw-keras { background: rgba(239,68,68,0.15); color: #f87171; }
+.fw-xgboost { background: rgba(34,197,94,0.15); color: #4ade80; }
+
+.method-short {
+  font-weight: 600; font-size: 0.88rem; color: var(--text);
+  margin-bottom: 6px; line-height: 1.5;
+}
+.method-explain {
+  font-size: 0.82rem; color: var(--text-soft); line-height: 1.65; margin-bottom: 12px;
+}
+
+/* Examples */
+.method-examples {
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;
+}
+.method-example {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  font-size: 0.78rem;
+}
+.me-context {
+  font-weight: 600; color: var(--text-muted); min-width: 90px;
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.me-code {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+  background: #0a0c12; padding: 3px 8px; border-radius: 5px; color: #86efac;
+}
+.me-learns {
+  color: var(--text-muted); font-size: 0.72rem; font-style: italic;
+}
+
+/* Rule */
+.method-rule {
+  font-size: 0.78rem; color: var(--text-soft); line-height: 1.5;
+  padding: 8px 12px; background: rgba(239,68,68,0.06);
+  border-left: 3px solid rgba(239,68,68,0.5); border-radius: 0 6px 6px 0;
+}
+
+/* Comparison table */
+.methods-table-section { margin-top: 36px; }
+.methods-table-section h2 {
+  font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 16px;
+}
+.methods-table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+.methods-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.methods-table th {
+  background: var(--surface2); color: var(--text-soft); font-weight: 600;
+  padding: 10px 14px; text-align: left; font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.3px;
+}
+.methods-table td {
+  padding: 10px 14px; border-top: 1px solid var(--border); color: var(--text-soft);
+}
+.methods-table code {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+  background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 3px; color: #86efac;
+}
+.methods-table tr:hover td { background: var(--surface); }
+
+/* Category badge in glossary for methods */
+.cat-methodes, .cat-m-thodes { background: rgba(168,85,247,0.15); color: #c084fc; }
