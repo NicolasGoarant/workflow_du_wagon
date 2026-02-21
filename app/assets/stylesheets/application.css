@@ -1628,3 +1628,33 @@ body {
 .quiz-separator { text-align: center; margin: 24px 0 18px; position: relative; }
 .quiz-separator::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--border); }
 .quiz-separator span { position: relative; background: var(--bg); padding: 0 14px; font-size: 0.75rem; color: var(--text-muted); }
+@media (max-width: 859px) {
+  .search-trigger { position: absolute; right: 60px; top: 50%; transform: translateY(-50%); padding: 6px 10px; min-width: auto; }
+  .search-trigger-text, .search-trigger-kbd { display: none !important; }
+  .search-modal { width: 95%; }
+}
+
+/* Fix search trigger mobile - ne mord pas le titre */
+@media (max-width: 859px) {
+  .header-inner { position: relative; }
+  .search-trigger { position: static; order: 0; margin-left: auto; padding: 6px; min-width: auto; border: none; background: transparent; }
+  .search-trigger-icon { font-size: 1.1rem; }
+  .search-trigger-text, .search-trigger-kbd { display: none !important; }
+  .search-modal { width: 95%; margin: 0 auto; }
+  .search-overlay { padding-top: 10vh; }
+}
+
+/* Header layout fix */
+.header-top { display: flex; align-items: center; gap: 10px; position: relative; }
+.header-text { flex: 1; min-width: 0; }
+.header-search { flex-shrink: 0; }
+
+@media (max-width: 859px) {
+  .burger { display: flex !important; order: 2; flex-shrink: 0; }
+  .header-text { order: 0; flex: 1; min-width: 0; }
+  .header-text h1 { font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .header-search { order: 1; flex-shrink: 0; }
+  .search-trigger { padding: 6px; min-width: auto; border: none; background: transparent; }
+  .search-trigger-icon { font-size: 1.1rem; }
+  .search-trigger-text, .search-trigger-kbd { display: none !important; }
+}
