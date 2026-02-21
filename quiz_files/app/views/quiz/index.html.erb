@@ -1,0 +1,301 @@
+<div class="quiz-page">
+
+  <!-- Start screen -->
+  <div class="quiz-start" id="quizStart">
+    <div class="quiz-start-icon">🧪</div>
+    <h1>Quiz Data Science</h1>
+    <p class="quiz-start-sub">40 questions pour tester tes connaissances sur tout le cursus</p>
+
+    <div class="quiz-start-cats">
+      <% @categories.each do |cat| %>
+        <% count = @questions.count { |q| q[:category] == cat } %>
+        <span class="quiz-cat-badge"><%= cat %> <small>(<%= count %>)</small></span>
+      <% end %>
+    </div>
+
+    <div class="quiz-mode-select">
+      <p class="quiz-mode-label">Mode :</p>
+      <button class="quiz-mode-btn active" data-mode="all" onclick="selectMode(this)">Toutes (40)</button>
+      <button class="quiz-mode-btn" data-mode="10" onclick="selectMode(this)">Express (10)</button>
+      <button class="quiz-mode-btn" data-mode="20" onclick="selectMode(this)">Standard (20)</button>
+    </div>
+
+    <div class="quiz-diff-select">
+      <p class="quiz-mode-label">Difficulté :</p>
+      <button class="quiz-diff-btn active" data-diff="all" onclick="selectDiff(this)">Toutes</button>
+      <button class="quiz-diff-btn" data-diff="facile" onclick="selectDiff(this)">Facile</button>
+      <button class="quiz-diff-btn" data-diff="moyen" onclick="selectDiff(this)">Moyen</button>
+      <button class="quiz-diff-btn" data-diff="difficile" onclick="selectDiff(this)">Difficile</button>
+    </div>
+
+    <button class="quiz-start-btn" onclick="startQuiz()">🚀 Lancer le quiz</button>
+  </div>
+
+  <!-- Quiz in progress -->
+  <div class="quiz-game" id="quizGame" style="display:none">
+    <!-- Progress bar -->
+    <div class="quiz-progress">
+      <div class="quiz-progress-bar" id="quizProgressBar"></div>
+    </div>
+    <div class="quiz-progress-text">
+      <span id="quizCounter">1/40</span>
+      <span id="quizScore">Score : 0</span>
+      <span id="quizDiffBadge" class="quiz-diff-badge"></span>
+    </div>
+
+    <!-- Question card -->
+    <div class="quiz-card" id="quizCard">
+      <div class="quiz-cat-label" id="quizCatLabel"></div>
+      <h2 class="quiz-question" id="quizQuestion"></h2>
+
+      <div class="quiz-choices" id="quizChoices"></div>
+
+      <!-- Explanation (hidden until answered) -->
+      <div class="quiz-explanation" id="quizExplanation" style="display:none">
+        <div class="quiz-explanation-icon" id="quizExplIcon"></div>
+        <p id="quizExplText"></p>
+      </div>
+
+      <button class="quiz-next-btn" id="quizNextBtn" style="display:none" onclick="nextQuestion()">
+        Question suivante →
+      </button>
+    </div>
+  </div>
+
+  <!-- Results screen -->
+  <div class="quiz-results" id="quizResults" style="display:none">
+    <div class="quiz-results-icon" id="resultsIcon"></div>
+    <h1 class="quiz-results-title" id="resultsTitle"></h1>
+    <div class="quiz-results-score" id="resultsScore"></div>
+    <div class="quiz-results-bar-wrap">
+      <div class="quiz-results-bar" id="resultsBar"></div>
+    </div>
+
+    <!-- Category breakdown -->
+    <div class="quiz-results-cats" id="resultsCats"></div>
+
+    <!-- Review wrong answers -->
+    <div class="quiz-review" id="quizReview"></div>
+
+    <div class="quiz-results-actions">
+      <button class="quiz-start-btn" onclick="resetQuiz()">🔄 Recommencer</button>
+      <a href="/" class="quiz-back-btn">← Retour aux workflows</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  // All questions from Rails
+  const ALL_QUESTIONS = <%= raw @questions.to_json %>;
+
+  let questions = [];
+  let currentIdx = 0;
+  let score = 0;
+  let answered = false;
+  let selectedMode = 'all';
+  let selectedDiff = 'all';
+  let history = []; // { question, userAnswer, correct }
+
+  // Mode & difficulty selection
+  window.selectMode = function(btn) {
+    document.querySelectorAll('.quiz-mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedMode = btn.dataset.mode;
+  };
+
+  window.selectDiff = function(btn) {
+    document.querySelectorAll('.quiz-diff-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedDiff = btn.dataset.diff;
+  };
+
+  window.startQuiz = function() {
+    // Filter by difficulty
+    let pool = selectedDiff === 'all' ? [...ALL_QUESTIONS] : ALL_QUESTIONS.filter(q => q.difficulty === selectedDiff);
+
+    // Shuffle
+    pool = shuffle(pool);
+
+    // Limit by mode
+    if (selectedMode !== 'all') {
+      pool = pool.slice(0, parseInt(selectedMode));
+    }
+
+    if (pool.length === 0) {
+      alert('Aucune question pour ces critères !');
+      return;
+    }
+
+    questions = pool;
+    currentIdx = 0;
+    score = 0;
+    history = [];
+    answered = false;
+
+    document.getElementById('quizStart').style.display = 'none';
+    document.getElementById('quizResults').style.display = 'none';
+    document.getElementById('quizGame').style.display = '';
+
+    renderQuestion();
+  };
+
+  window.nextQuestion = function() {
+    currentIdx++;
+    answered = false;
+    if (currentIdx >= questions.length) {
+      showResults();
+    } else {
+      renderQuestion();
+    }
+  };
+
+  window.resetQuiz = function() {
+    document.getElementById('quizStart').style.display = '';
+    document.getElementById('quizGame').style.display = 'none';
+    document.getElementById('quizResults').style.display = 'none';
+  };
+
+  function renderQuestion() {
+    const q = questions[currentIdx];
+    const total = questions.length;
+
+    // Progress
+    document.getElementById('quizProgressBar').style.width = ((currentIdx / total) * 100) + '%';
+    document.getElementById('quizCounter').textContent = (currentIdx + 1) + '/' + total;
+    document.getElementById('quizScore').textContent = 'Score : ' + score;
+
+    // Difficulty badge
+    const diffBadge = document.getElementById('quizDiffBadge');
+    diffBadge.textContent = q.difficulty;
+    diffBadge.className = 'quiz-diff-badge diff-' + q.difficulty;
+
+    // Category
+    document.getElementById('quizCatLabel').textContent = q.category;
+
+    // Question
+    document.getElementById('quizQuestion').innerHTML = q.question;
+
+    // Choices
+    const choicesEl = document.getElementById('quizChoices');
+    choicesEl.innerHTML = q.choices.map((c, i) =>
+      '<button class="quiz-choice" data-idx="' + i + '" onclick="checkAnswer(this, ' + i + ')">' +
+        '<span class="quiz-choice-letter">' + ['A', 'B', 'C', 'D'][i] + '</span>' +
+        '<span class="quiz-choice-text">' + c + '</span>' +
+      '</button>'
+    ).join('');
+
+    // Hide explanation & next
+    document.getElementById('quizExplanation').style.display = 'none';
+    document.getElementById('quizNextBtn').style.display = 'none';
+  }
+
+  window.checkAnswer = function(btn, idx) {
+    if (answered) return;
+    answered = true;
+
+    const q = questions[currentIdx];
+    const correct = idx === q.answer;
+
+    if (correct) score++;
+
+    history.push({ question: q, userAnswer: idx, correct: correct });
+
+    // Mark all choices
+    const choices = document.querySelectorAll('.quiz-choice');
+    choices.forEach((c, i) => {
+      c.classList.add('disabled');
+      if (i === q.answer) c.classList.add('correct');
+      if (i === idx && !correct) c.classList.add('wrong');
+    });
+
+    // Show explanation
+    const explEl = document.getElementById('quizExplanation');
+    explEl.style.display = '';
+    explEl.className = 'quiz-explanation ' + (correct ? 'expl-correct' : 'expl-wrong');
+    document.getElementById('quizExplIcon').textContent = correct ? '✅' : '❌';
+    document.getElementById('quizExplText').innerHTML = q.explanation;
+
+    // Update score display
+    document.getElementById('quizScore').textContent = 'Score : ' + score;
+
+    // Show next button
+    const nextBtn = document.getElementById('quizNextBtn');
+    nextBtn.style.display = '';
+    nextBtn.textContent = (currentIdx === questions.length - 1) ? '🏆 Voir les résultats' : 'Question suivante →';
+  };
+
+  function showResults() {
+    document.getElementById('quizGame').style.display = 'none';
+    document.getElementById('quizResults').style.display = '';
+
+    const total = questions.length;
+    const pct = Math.round((score / total) * 100);
+
+    // Icon & title based on score
+    let icon, title;
+    if (pct >= 90) { icon = '🏆'; title = 'Exceptionnel !'; }
+    else if (pct >= 75) { icon = '🎯'; title = 'Très bien !'; }
+    else if (pct >= 60) { icon = '👍'; title = 'Bien joué !'; }
+    else if (pct >= 40) { icon = '💪'; title = 'Pas mal, continue !'; }
+    else { icon = '📚'; title = 'À retravailler !'; }
+
+    document.getElementById('resultsIcon').textContent = icon;
+    document.getElementById('resultsTitle').textContent = title;
+    document.getElementById('resultsScore').innerHTML = '<strong>' + score + '</strong> / ' + total + ' <span class="results-pct">(' + pct + '%)</span>';
+    document.getElementById('resultsBar').style.width = pct + '%';
+    document.getElementById('resultsBar').className = 'quiz-results-bar ' + (pct >= 75 ? 'bar-green' : pct >= 50 ? 'bar-yellow' : 'bar-red');
+
+    // Category breakdown
+    const catScores = {};
+    history.forEach(h => {
+      const cat = h.question.category;
+      if (!catScores[cat]) catScores[cat] = { correct: 0, total: 0 };
+      catScores[cat].total++;
+      if (h.correct) catScores[cat].correct++;
+    });
+
+    const catsEl = document.getElementById('resultsCats');
+    catsEl.innerHTML = '<h3>Résultats par catégorie</h3>' +
+      Object.entries(catScores).map(([cat, s]) => {
+        const catPct = Math.round((s.correct / s.total) * 100);
+        const barClass = catPct >= 75 ? 'bar-green' : catPct >= 50 ? 'bar-yellow' : 'bar-red';
+        return '<div class="result-cat-row">' +
+          '<span class="result-cat-name">' + cat + '</span>' +
+          '<div class="result-cat-bar-wrap"><div class="result-cat-bar ' + barClass + '" style="width:' + catPct + '%"></div></div>' +
+          '<span class="result-cat-score">' + s.correct + '/' + s.total + '</span>' +
+        '</div>';
+      }).join('');
+
+    // Review wrong answers
+    const wrongs = history.filter(h => !h.correct);
+    const reviewEl = document.getElementById('quizReview');
+    if (wrongs.length === 0) {
+      reviewEl.innerHTML = '<p class="quiz-perfect">🎉 Aucune erreur — parfait !</p>';
+    } else {
+      reviewEl.innerHTML = '<h3>À revoir (' + wrongs.length + ')</h3>' +
+        wrongs.map(h => {
+          const q = h.question;
+          return '<div class="review-card">' +
+            '<div class="review-cat">' + q.category + '</div>' +
+            '<p class="review-q">' + q.question + '</p>' +
+            '<div class="review-answers">' +
+              '<div class="review-wrong">❌ Ta réponse : ' + q.choices[h.userAnswer] + '</div>' +
+              '<div class="review-correct">✅ Bonne réponse : ' + q.choices[q.answer] + '</div>' +
+            '</div>' +
+            '<p class="review-expl">' + q.explanation + '</p>' +
+          '</div>';
+        }).join('');
+    }
+  }
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+})();
+</script>
