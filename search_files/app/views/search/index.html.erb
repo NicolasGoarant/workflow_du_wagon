@@ -1,0 +1,23 @@
+<div class="search-page">
+  <div class="search-page-header">
+    <h1>🔍 Résultats pour « <%= @query %> »</h1>
+    <p><%= @results.length %> résultat<%= 's' if @results.length != 1 %></p>
+  </div>
+
+  <% if @results.empty? %>
+    <div class="search-no-results-page">Aucun résultat trouvé.</div>
+  <% else %>
+    <div class="search-results-page">
+      <% @results.each do |r| %>
+        <a href="<%= r[:url] %>" class="search-result-card">
+          <span class="sr-icon"><%= r[:icon] %></span>
+          <div class="sr-content">
+            <div class="sr-title"><%= r[:title] %></div>
+            <div class="sr-subtitle"><%= r[:subtitle] %></div>
+          </div>
+          <span class="sr-type"><%= r[:type] %></span>
+        </a>
+      <% end %>
+    </div>
+  <% end %>
+</div>
