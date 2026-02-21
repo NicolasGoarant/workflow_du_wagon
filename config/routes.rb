@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  root "workflows#index"
+  root "home#index"
   get "quiz", to: "quiz#index", as: :quiz
   get "recherche", to: "search#index", as: :recherche
   get "methodes", to: "methods#index", as: :methodes

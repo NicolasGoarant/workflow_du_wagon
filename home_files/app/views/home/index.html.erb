@@ -1,0 +1,140 @@
+<div class="home-page">
+
+  <!-- ══ HERO ══ -->
+  <div class="home-hero">
+    <div class="home-hero-icon">🧠</div>
+    <h1 class="home-hero-title">Workflow du Wagon</h1>
+    <p class="home-hero-sub">Tout le cursus Data Science du Wagon en workflows interactifs, code commenté et explications visuelles.</p>
+    <a href="/workflows/preprocessing" class="home-hero-btn">
+      <span>🚀</span> Commencer par le Preprocessing
+    </a>
+  </div>
+
+  <!-- ══ PARCOURS D'APPRENTISSAGE ══ -->
+  <section class="home-section">
+    <h2 class="home-section-title">📍 Parcours d'apprentissage</h2>
+    <p class="home-section-sub">Suis les étapes dans l'ordre — chaque bloc s'appuie sur le précédent.</p>
+
+    <div class="home-parcours">
+      <% @parcours.each_with_index do |p, idx| %>
+        <div class="parcours-block pb-<%= p[:color] %>">
+          <div class="parcours-header">
+            <span class="parcours-num"><%= idx + 1 %></span>
+            <span class="parcours-icon"><%= p[:icon] %></span>
+            <div>
+              <div class="parcours-label"><%= p[:label] %></div>
+              <div class="parcours-desc"><%= p[:description] %></div>
+            </div>
+          </div>
+          <div class="parcours-workflows">
+            <% p[:workflows].each do |w| %>
+              <a href="<%= workflow_path(w[:slug]) %>" class="parcours-wf">
+                <span class="parcours-wf-icon"><%= w[:icon] %></span>
+                <span class="parcours-wf-title"><%= w[:title] %></span>
+              </a>
+            <% end %>
+          </div>
+        </div>
+        <% if idx < @parcours.length - 1 %>
+          <div class="parcours-arrow">↓</div>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+
+  <!-- ══ ACCÈS RAPIDES ══ -->
+  <section class="home-section">
+    <h2 class="home-section-title">⚡ Accès rapides</h2>
+    <div class="home-quick-grid">
+
+      <a href="/glossaire" class="home-quick-card hqc-purple">
+        <div class="hqc-icon">📖</div>
+        <div class="hqc-title">Glossaire</div>
+        <div class="hqc-stat"><%= @glossary_count %> termes</div>
+        <div class="hqc-desc">Tous les termes clés du ML avec définition, code et lien vers le workflow</div>
+      </a>
+
+      <a href="/methodes" class="home-quick-card hqc-cyan">
+        <div class="hqc-icon">⚙️</div>
+        <div class="hqc-title">Méthodes ML</div>
+        <div class="hqc-stat"><%= @methods_count %> méthodes</div>
+        <div class="hqc-desc">.fit(), .transform(), .predict() — la logique unifiée</div>
+      </a>
+
+      <a href="/quiz" class="home-quick-card hqc-green">
+        <div class="hqc-icon">🧪</div>
+        <div class="hqc-title">Quiz</div>
+        <div class="hqc-stat"><%= @quiz_count %> questions</div>
+        <div class="hqc-desc">Teste tes connaissances par catégorie ou difficulté</div>
+      </a>
+
+      <div class="home-quick-card hqc-yellow" style="cursor:pointer" onclick="document.getElementById('searchTrigger').click()">
+        <div class="hqc-icon">🔍</div>
+        <div class="hqc-title">Recherche</div>
+        <div class="hqc-stat">⌘K</div>
+        <div class="hqc-desc">Chercher un terme, une méthode ou un workflow instantanément</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ LA RÈGLE D'OR ══ -->
+  <section class="home-section">
+    <div class="home-golden">
+      <h3>🔑 Les 4 règles d'or du Data Scientist</h3>
+      <div class="home-golden-grid">
+
+        <div class="golden-rule">
+          <div class="golden-num">1</div>
+          <div>
+            <div class="golden-title">Split d'abord, fit ensuite</div>
+            <div class="golden-text">Toujours séparer train/test AVANT tout preprocessing. Sinon, data leakage garanti.</div>
+          </div>
+        </div>
+
+        <div class="golden-rule">
+          <div class="golden-num">2</div>
+          <div>
+            <div class="golden-title">fit sur le train, transform sur le test</div>
+            <div class="golden-text"><code>fit_transform(X_train)</code> puis <code>transform(X_test)</code>. Jamais de fit sur le test.</div>
+          </div>
+        </div>
+
+        <div class="golden-rule">
+          <div class="golden-num">3</div>
+          <div>
+            <div class="golden-title">Train ≈ Test = bon modèle</div>
+            <div class="golden-text">Train >> Test = overfitting. Train ≈ Test ≈ mauvais = underfitting. L'équilibre est la clé.</div>
+          </div>
+        </div>
+
+        <div class="golden-rule">
+          <div class="golden-num">4</div>
+          <div>
+            <div class="golden-title">L'accuracy ment sur les classes déséquilibrées</div>
+            <div class="golden-text">95% de non-fraudeurs → accuracy 95% en prédisant toujours "non". Regarde precision, recall, F1.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ TOUS LES WORKFLOWS ══ -->
+  <section class="home-section">
+    <h2 class="home-section-title">📚 Tous les workflows</h2>
+    <div class="home-wf-grid">
+      <% @workflows.each do |w| %>
+        <a href="<%= workflow_path(w[:slug]) %>" class="home-wf-card">
+          <span class="home-wf-icon"><%= w[:icon] %></span>
+          <div class="home-wf-info">
+            <div class="home-wf-title"><%= w[:title] %></div>
+            <div class="home-wf-sub"><%= w[:subtitle] %></div>
+          </div>
+          <span class="home-wf-badge badge-<%= w[:badge_color] %>"><%= w[:badge] %></span>
+        </a>
+      <% end %>
+    </div>
+  </section>
+
+</div>
