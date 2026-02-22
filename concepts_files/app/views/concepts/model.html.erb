@@ -1,0 +1,199 @@
+<div class="concepts-page">
+
+  <!-- Hero -->
+  <div class="concepts-hero">
+    <div class="concepts-hero-icon">🔬</div>
+    <h1 class="concepts-hero-title">C'est quoi, un « modèle » ?</h1>
+    <p class="concepts-hero-sub">La question que personne ne pose et que tout le monde devrait poser.</p>
+  </div>
+
+  <!-- Intro -->
+  <div class="concepts-intro">
+    <div class="concepts-intro-box">
+      <p class="concepts-intro-big">Un modèle, c'est <strong>un fichier de nombres</strong>.</p>
+      <p>Quand tu fais <code>.fit()</code>, l'algorithme cherche les meilleurs nombres pour que les prédictions collent aux données. Ces nombres s'appellent les <strong>paramètres</strong>.</p>
+    </div>
+
+    <div class="concepts-triad">
+      <div class="triad-card">
+        <div class="triad-icon">⚙️</div>
+        <div class="triad-label">L'algorithme</div>
+        <div class="triad-desc">La <strong>méthode</strong> d'apprentissage — comment trouver les bons nombres</div>
+      </div>
+      <div class="triad-arrow">→</div>
+      <div class="triad-card triad-highlight">
+        <div class="triad-icon">📦</div>
+        <div class="triad-label">Le modèle</div>
+        <div class="triad-desc">Le <strong>résultat</strong> : les nombres trouvés, prêts à prédire</div>
+      </div>
+      <div class="triad-arrow">→</div>
+      <div class="triad-card">
+        <div class="triad-icon">🎯</div>
+        <div class="triad-label">La prédiction</div>
+        <div class="triad-desc">Le modèle <strong>applique</strong> ses nombres à de nouvelles données</div>
+      </div>
+    </div>
+
+    <div class="concepts-code-box">
+      <div class="concepts-code-header"><span>En code</span></div>
+      <pre><code class="language-python"><span class="c"># L'algorithme (la recette)</span>
+model = LinearRegression()
+
+<span class="c"># .fit() → l'algorithme produit le modèle (les nombres)</span>
+model.fit(X_train, y_train)
+
+<span class="c"># .predict() → le modèle applique ses nombres</span>
+predictions = model.predict(X_test)
+
+<span class="c"># On peut sauvegarder ces nombres</span>
+joblib.dump(model, "model.pkl")  <span class="c"># → fichier de nombres</span>
+
+<span class="c"># Et les recharger sur un serveur, sans les données d'entraînement</span>
+model = joblib.load("model.pkl")
+model.predict(new_data)  <span class="c"># ça marche !</span></code></pre>
+    </div>
+  </div>
+
+  <!-- Section title -->
+  <h2 class="concepts-section-title">🔍 Modèle par modèle : on regarde à l'intérieur</h2>
+  <p class="concepts-section-sub">Pour chaque modèle du cursus, voici concrètement ce que contient la « boîte noire ».</p>
+
+  <!-- Model cards -->
+  <div class="concepts-models">
+    <% @concepts.each do |c| %>
+      <div class="concept-card cc-<%= c[:color] %>">
+
+        <div class="concept-header" onclick="this.parentElement.classList.toggle('open')">
+          <span class="concept-icon"><%= c[:icon] %></span>
+          <h3 class="concept-model-name"><%= c[:model] %></h3>
+          <span class="concept-toggle">▾</span>
+        </div>
+
+        <div class="concept-summary">
+          <div class="concept-param-name"><%= c[:params_name] %></div>
+          <div class="concept-param-example"><%= c[:params_example].html_safe %></div>
+        </div>
+
+        <div class="concept-details">
+
+          <div class="concept-detail-row">
+            <div class="concept-detail-label">📐 Combien de paramètres ?</div>
+            <div class="concept-detail-text"><%= c[:params_count] %></div>
+          </div>
+
+          <div class="concept-detail-row">
+            <div class="concept-detail-label">🔧 Que fait <code>.fit()</code> ?</div>
+            <div class="concept-detail-text"><%= c[:what_fit_does] %></div>
+          </div>
+
+          <div class="concept-detail-row">
+            <div class="concept-detail-label">🎯 Que fait <code>.predict()</code> ?</div>
+            <div class="concept-detail-text"><%= c[:what_predict_does] %></div>
+          </div>
+
+          <div class="concept-detail-row">
+            <div class="concept-detail-label">💾 Le fichier sauvegardé contient…</div>
+            <div class="concept-detail-text"><%= c[:saved_model] %></div>
+          </div>
+
+          <div class="concept-inspect">
+            <span class="concept-inspect-label">Inspecter :</span>
+            <code><%= c[:code_inspect] %></code>
+          </div>
+
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Résumé visuel -->
+  <div class="concepts-summary-box">
+    <h3>📊 L'échelle des paramètres</h3>
+    <div class="param-scale">
+      <div class="param-scale-row">
+        <span class="param-scale-model">KNN</span>
+        <div class="param-scale-bar-wrap">
+          <div class="param-scale-bar psb-cyan" style="width: 2%"></div>
+        </div>
+        <span class="param-scale-count">0</span>
+      </div>
+      <div class="param-scale-row">
+        <span class="param-scale-model">Régression Lin.</span>
+        <div class="param-scale-bar-wrap">
+          <div class="param-scale-bar psb-blue" style="width: 4%"></div>
+        </div>
+        <span class="param-scale-count">~10</span>
+      </div>
+      <div class="param-scale-row">
+        <span class="param-scale-model">K-Means (K=5)</span>
+        <div class="param-scale-bar-wrap">
+          <div class="param-scale-bar psb-purple" style="width: 5%"></div>
+        </div>
+        <span class="param-scale-count">~50</span>
+      </div>
+      <div class="param-scale-row">
+        <span class="param-scale-model">Dense simple</span>
+        <div class="param-scale-bar-wrap">
+          <div class="param-scale-bar psb-red" style="width: 8%"></div>
+        </div>
+        <span class="param-scale-count">~700</span>
+      </div>
+      <div class="param-scale-row">
+        <span class="param-scale-model">Random Forest</span>
+        <div class="param-scale-bar-wrap">
+          <div class="param-scale-bar psb-green" style="width: 20%"></div>
+        </div>
+        <span class="param-scale-count">~50K</span>
+      </div>
+      <div class="param-scale-row">
+        <span class="param-scale-model">XGBoost</span>
+        <div class="param-scale-bar-wrap">
+          <div class="param-scale-bar psb-yellow" style="width: 30%"></div>
+        </div>
+        <span class="param-scale-count">~100K</span>
+      </div>
+      <div class="param-scale-row">
+        <span class="param-scale-model">VGG16</span>
+        <div class="param-scale-bar-wrap">
+          <div class="param-scale-bar psb-red" style="width: 75%"></div>
+        </div>
+        <span class="param-scale-count">138M</span>
+      </div>
+      <div class="param-scale-row">
+        <span class="param-scale-model">GPT-4</span>
+        <div class="param-scale-bar-wrap">
+          <div class="param-scale-bar psb-gradient" style="width: 100%"></div>
+        </div>
+        <span class="param-scale-count">~1 700B</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Takeaway -->
+  <div class="concepts-takeaway">
+    <div class="concepts-takeaway-icon">💡</div>
+    <div>
+      <p class="concepts-takeaway-title">Le takeaway</p>
+      <p class="concepts-takeaway-text">Quand tu fais <code>joblib.dump(model, "model.pkl")</code>, tu sauvegardes un fichier de nombres. Quand tu le recharges sur un serveur en production, il n'a plus besoin des données d'entraînement — il a ses paramètres, il peut prédire. C'est ça, un modèle.</p>
+    </div>
+  </div>
+
+  <div class="concepts-nav">
+    <a href="/" class="concepts-back-btn">← Retour à l'accueil</a>
+  </div>
+
+</div>
+
+<script>
+  // Toggle model cards open/close
+  document.querySelectorAll('.concept-card').forEach(function(card) {
+    // Open first card by default
+  });
+  var firstCard = document.querySelector('.concept-card');
+  if (firstCard) firstCard.classList.add('open');
+
+  // Syntax highlighting
+  document.querySelectorAll('.concepts-page pre code').forEach(function(el) {
+    if (typeof hljs !== 'undefined') hljs.highlightElement(el);
+  });
+</script>

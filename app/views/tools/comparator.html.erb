@@ -1,0 +1,123 @@
+<div class="comparator-page">
+
+  <div class="comparator-header">
+    <div class="comparator-header-icon">⚖️</div>
+    <h1>Comparateur de modèles</h1>
+    <p class="comparator-sub">Sélectionne 2 ou 3 modèles pour les comparer côte à côte.</p>
+  </div>
+
+  <!-- Model selector -->
+  <div class="comp-selector">
+    <% @models.each do |m| %>
+      <button class="comp-chip" data-id="<%= m[:id] %>" onclick="toggleModel(this)">
+        <span class="comp-chip-icon"><%= m[:icon] %></span>
+        <span class="comp-chip-name"><%= m[:name] %></span>
+      </button>
+    <% end %>
+  </div>
+
+  <div class="comp-count"><span id="compCount">0</span>/3 sélectionnés</div>
+
+  <!-- Comparison table (hidden until selection) -->
+  <div class="comp-table-wrap" id="compTable" style="display:none">
+    <div class="comp-table-scroll">
+      <table class="comp-table" id="compTableBody">
+        <!-- JS rendered -->
+      </table>
+    </div>
+  </div>
+
+  <div class="comp-empty" id="compEmpty">
+    <p>👆 Clique sur 2 ou 3 modèles ci-dessus pour lancer la comparaison</p>
+  </div>
+
+  <div class="comp-footer">
+    <a href="/" class="comp-back-btn">← Retour à l'accueil</a>
+  </div>
+</div>
+
+<script>
+(function() {
+  var ALL_MODELS = <%= raw @models.to_json %>;
+  var selected = [];
+
+  window.toggleModel = function(btn) {
+    var id = btn.dataset.id;
+    var idx = selected.indexOf(id);
+    if (idx > -1) {
+      selected.splice(idx, 1);
+      btn.classList.remove('active');
+    } else {
+      if (selected.length >= 3) {
+        // Deselect first
+        var firstId = selected.shift();
+        document.querySelector('.comp-chip[data-id="' + firstId + '"]').classList.remove('active');
+      }
+      selected.push(id);
+      btn.classList.add('active');
+    }
+    document.getElementById('compCount').textContent = selected.length;
+    renderTable();
+  };
+
+  function renderTable() {
+    if (selected.length < 2) {
+      document.getElementById('compTable').style.display = 'none';
+      document.getElementById('compEmpty').style.display = '';
+      return;
+    }
+    document.getElementById('compTable').style.display = '';
+    document.getElementById('compEmpty').style.display = 'none';
+
+    var models = selected.map(function(id) {
+      return ALL_MODELS.find(function(m) { return m.id === id; });
+    });
+
+    var rows = [
+      { label: 'Type', key: 'type' },
+      { label: 'Scaling requis', key: 'scaling', bool: true },
+      { label: 'Sensible aux outliers', key: 'outliers_sensitive', bool: true },
+      { label: 'Interprétable', key: 'interpretable', bool: true },
+      { label: 'Gère le non-linéaire', key: 'handles_nonlinear', bool: true },
+      { label: 'Gère les NaN', key: 'handles_missing', bool: true },
+      { label: 'Feature engineering requis', key: 'needs_feature_eng', bool: true },
+      { label: 'Vitesse entraînement', key: 'speed_train' },
+      { label: 'Vitesse prédiction', key: 'speed_predict' },
+      { label: 'Nombre de paramètres', key: 'n_params' },
+      { label: 'Risque d\'overfitting', key: 'overfitting_risk' },
+      { label: 'Quand l\'utiliser', key: 'when', highlight: true },
+      { label: 'Sklearn / Keras', key: 'sklearn', code: true },
+    ];
+
+    var html = '<thead><tr><th class="comp-label-col"></th>';
+    models.forEach(function(m) {
+      html += '<th class="comp-model-col"><span class="comp-th-icon">' + m.icon + '</span><span class="comp-th-name">' + m.name + '</span></th>';
+    });
+    html += '</tr></thead><tbody>';
+
+    rows.forEach(function(row) {
+      html += '<tr><td class="comp-label">' + row.label + '</td>';
+      models.forEach(function(m) {
+        var val = m[row.key];
+        var cellClass = 'comp-cell';
+        var display = val;
+
+        if (row.bool) {
+          display = val ? '<span class="comp-yes">✅ Oui</span>' : '<span class="comp-no">❌ Non</span>';
+        } else if (row.code) {
+          display = '<code>' + val + '</code>';
+          cellClass += ' comp-code-cell';
+        } else if (row.highlight) {
+          cellClass += ' comp-when-cell';
+        }
+
+        html += '<td class="' + cellClass + '">' + display + '</td>';
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody>';
+    document.getElementById('compTableBody').innerHTML = html;
+  }
+})();
+</script>

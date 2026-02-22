@@ -62,21 +62,27 @@
       <a href="/glossaire" class="drawer-link"><span class="drawer-icon">📖</span><span>Glossaire</span></a>
         <a href="/methodes" class="drawer-link"><span class="drawer-icon">⚙️</span><span>Méthodes ML</span></a>
         <a href="/quiz" class="drawer-link"><span class="drawer-icon">🧪</span><span>Quiz</span></a>
+        <a href="/cheatsheet" class="drawer-link"><span class="drawer-icon">📋</span><span>Cheatsheet</span></a>
+        <a href="/quel-modele" class="drawer-link"><span class="drawer-icon">🧭</span><span>Quel modèle ?</span></a>
+        <a href="/comparateur" class="drawer-link"><span class="drawer-icon">⚖️</span><span>Comparateur</span></a>
+        <a href="/comprendre/modele" class="drawer-link"><span class="drawer-icon">🔬</span><span>C'est quoi un modèle ?</span></a>
+        <a href="/cheatsheet" class="drawer-link"><span class="drawer-icon">📋</span><span>Cheatsheet</span></a>
+        <a href="/quel-modele" class="drawer-link"><span class="drawer-icon">🧭</span><span>Quel modèle ?</span></a>
+        <a href="/comparateur" class="drawer-link"><span class="drawer-icon">⚖️</span><span>Comparateur</span></a>
+        <a href="/comprendre/modele" class="drawer-link"><span class="drawer-icon">🔬</span><span>C'est quoi un modèle ?</span></a>
     </div>
   </nav>
 
-  <!-- Desktop horizontal nav -->
+  <!-- Desktop nav - outils uniquement -->
   <nav class="nav-desktop" id="navDesktop">
-    <% @workflows.each do |w| %>
-      <a href="<%= workflow_path(w[:slug]) %>"
-         class="nav-btn <%= 'active' if w[:slug] == @current[:slug] %>">
-        <span class="nav-icon"><%= w[:icon] %></span>
-        <span class="nav-label"><%= w[:title] %></span>
-      </a>
-    <% end %>
+    <a href="/" class="nav-btn"><span class="nav-icon">🏠</span><span class="nav-label">Accueil</span></a>
     <a href="/methodes" class="nav-btn nav-btn--glossary"><span class="nav-icon">⚙️</span><span class="nav-label">Méthodes ML</span></a>
     <a href="/glossaire" class="nav-btn nav-btn--glossary"><span class="nav-icon">📖</span><span class="nav-label">Glossaire</span></a>
     <a href="/quiz" class="nav-btn nav-btn--glossary"><span class="nav-icon">🧪</span><span class="nav-label">Quiz</span></a>
+    <a href="/cheatsheet" class="nav-btn nav-btn--glossary"><span class="nav-icon">📋</span><span class="nav-label">Cheatsheet</span></a>
+    <a href="/quel-modele" class="nav-btn nav-btn--glossary"><span class="nav-icon">🧭</span><span class="nav-label">Quel modèle ?</span></a>
+    <a href="/comparateur" class="nav-btn nav-btn--glossary"><span class="nav-icon">⚖️</span><span class="nav-label">Comparateur</span></a>
+    <a href="/comprendre/modele" class="nav-btn nav-btn--glossary"><span class="nav-icon">🔬</span><span class="nav-label">C'est quoi un modèle ?</span></a>
   </nav>
 
   <main class="content">

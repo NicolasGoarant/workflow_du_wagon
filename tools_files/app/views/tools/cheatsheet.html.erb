@@ -1,0 +1,339 @@
+<div class="cheatsheet-page">
+
+  <div class="cheatsheet-header">
+    <h1>📋 Cheatsheet Data Science</h1>
+    <p class="cheatsheet-sub">L'essentiel du cursus sur une page — à garder ouvert pendant les challenges</p>
+    <button class="cheatsheet-print-btn" onclick="window.print()">🖨️ Imprimer / PDF</button>
+  </div>
+
+  <!-- ══ 1. WORKFLOW TYPE ══ -->
+  <div class="cs-section">
+    <h2>🔄 Le workflow universel</h2>
+    <div class="cs-flow">
+      <span class="cs-flow-step">Charger</span>
+      <span class="cs-flow-arrow">→</span>
+      <span class="cs-flow-step">Explorer</span>
+      <span class="cs-flow-arrow">→</span>
+      <span class="cs-flow-step">Nettoyer</span>
+      <span class="cs-flow-arrow">→</span>
+      <span class="cs-flow-step">Split</span>
+      <span class="cs-flow-arrow">→</span>
+      <span class="cs-flow-step">Préprocesser</span>
+      <span class="cs-flow-arrow">→</span>
+      <span class="cs-flow-step cs-flow-accent">Fit</span>
+      <span class="cs-flow-arrow">→</span>
+      <span class="cs-flow-step">Évaluer</span>
+      <span class="cs-flow-arrow">→</span>
+      <span class="cs-flow-step">Tuner</span>
+    </div>
+  </div>
+
+  <!-- ══ 2. COMMANDES ESSENTIELLES ══ -->
+  <div class="cs-section">
+    <h2>⌨️ Commandes essentielles</h2>
+    <div class="cs-cols">
+
+      <div class="cs-col">
+        <h3>Pandas — Explorer</h3>
+        <div class="cs-cmd"><code>df.shape</code> <span># (lignes, colonnes)</span></div>
+        <div class="cs-cmd"><code>df.dtypes</code> <span># types</span></div>
+        <div class="cs-cmd"><code>df.describe()</code> <span># stats</span></div>
+        <div class="cs-cmd"><code>df.isna().sum()</code> <span># NaN par col</span></div>
+        <div class="cs-cmd"><code>df.duplicated().sum()</code> <span># doublons</span></div>
+        <div class="cs-cmd"><code>df.corr()</code> <span># corrélations</span></div>
+        <div class="cs-cmd"><code>df["col"].value_counts()</code> <span># fréquences</span></div>
+      </div>
+
+      <div class="cs-col">
+        <h3>Pandas — Nettoyer</h3>
+        <div class="cs-cmd"><code>df.drop_duplicates()</code> <span># doublons</span></div>
+        <div class="cs-cmd"><code>df.dropna(subset=[...])</code> <span># suppr NaN</span></div>
+        <div class="cs-cmd"><code>df.fillna(median)</code> <span># imputer</span></div>
+        <div class="cs-cmd"><code>df["col"].clip(lo, hi)</code> <span># capping</span></div>
+        <div class="cs-cmd"><code>pd.get_dummies(df, columns=[...])</code> <span># one-hot</span></div>
+        <div class="cs-cmd"><code>np.log1p(df["col"])</code> <span># log-transform</span></div>
+      </div>
+
+      <div class="cs-col">
+        <h3>Sklearn — Modéliser</h3>
+        <div class="cs-cmd"><code>train_test_split(X, y, test_size=0.3)</code></div>
+        <div class="cs-cmd"><code>scaler.fit_transform(X_train)</code></div>
+        <div class="cs-cmd"><code>scaler.transform(X_test)</code></div>
+        <div class="cs-cmd"><code>model.fit(X_train, y_train)</code></div>
+        <div class="cs-cmd"><code>model.predict(X_test)</code></div>
+        <div class="cs-cmd"><code>model.score(X_test, y_test)</code></div>
+        <div class="cs-cmd"><code>cross_val_score(model, X, y, cv=5)</code></div>
+      </div>
+
+      <div class="cs-col">
+        <h3>Keras — Deep Learning</h3>
+        <div class="cs-cmd"><code>Sequential([Dense(64, activation='relu'), ...])</code></div>
+        <div class="cs-cmd"><code>model.compile(optimizer='adam', loss='...')</code></div>
+        <div class="cs-cmd"><code>model.fit(X, y, epochs=50, batch_size=32)</code></div>
+        <div class="cs-cmd"><code>model.evaluate(X_test, y_test)</code></div>
+        <div class="cs-cmd"><code>EarlyStopping(patience=5)</code></div>
+        <div class="cs-cmd"><code>model.summary()</code> <span># architecture</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ 3. QUEL MODÈLE POUR QUEL PROBLÈME ══ -->
+  <div class="cs-section">
+    <h2>🎯 Quel modèle pour quel problème</h2>
+    <div class="cs-table-wrap">
+      <table class="cs-table">
+        <thead>
+          <tr>
+            <th>Problème</th>
+            <th>Premier choix</th>
+            <th>Si ça ne suffit pas</th>
+            <th>Artillerie lourde</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Régression</strong> (prédire un nombre)</td>
+            <td>Régression Linéaire + Ridge</td>
+            <td>Random Forest Regressor</td>
+            <td>XGBoost / Neural Network</td>
+          </tr>
+          <tr>
+            <td><strong>Classification binaire</strong> (oui/non)</td>
+            <td>Régression Logistique</td>
+            <td>Random Forest Classifier</td>
+            <td>XGBoost / Neural Network</td>
+          </tr>
+          <tr>
+            <td><strong>Classification multi-classes</strong></td>
+            <td>Régression Logistique (OvR)</td>
+            <td>Random Forest</td>
+            <td>XGBoost / Dense + Softmax</td>
+          </tr>
+          <tr>
+            <td><strong>Clustering</strong> (grouper sans labels)</td>
+            <td>K-Means</td>
+            <td>DBSCAN / Hierarchical</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>Réduction de dimensions</strong></td>
+            <td>PCA</td>
+            <td>t-SNE (visu seulement)</td>
+            <td>UMAP</td>
+          </tr>
+          <tr>
+            <td><strong>Images</strong></td>
+            <td>CNN + Transfer Learning</td>
+            <td>VGG16 / ResNet fine-tuné</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>Texte / Séquences</strong></td>
+            <td>LSTM / GRU</td>
+            <td>Transformers (BERT)</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 4. MÉTRIQUES ══ -->
+  <div class="cs-section">
+    <h2>📊 Métriques — laquelle choisir ?</h2>
+    <div class="cs-cols cs-cols-2">
+
+      <div class="cs-col">
+        <h3>Régression</h3>
+        <div class="cs-metric">
+          <div class="cs-metric-name">R² (score)</div>
+          <div class="cs-metric-desc">% de variance expliquée. 1 = parfait, 0 = nul. <strong>Métrique par défaut.</strong></div>
+        </div>
+        <div class="cs-metric">
+          <div class="cs-metric-name">RMSE</div>
+          <div class="cs-metric-desc">Erreur en unité de la target. Pénalise les grosses erreurs. <strong>Le plus utilisé.</strong></div>
+        </div>
+        <div class="cs-metric">
+          <div class="cs-metric-name">MAE</div>
+          <div class="cs-metric-desc">Erreur absolue moyenne. Plus robuste aux outliers que RMSE.</div>
+        </div>
+      </div>
+
+      <div class="cs-col">
+        <h3>Classification</h3>
+        <div class="cs-metric">
+          <div class="cs-metric-name">Accuracy</div>
+          <div class="cs-metric-desc">% de bonnes prédictions. ⚠️ Trompeuse si classes déséquilibrées.</div>
+        </div>
+        <div class="cs-metric">
+          <div class="cs-metric-name">Precision</div>
+          <div class="cs-metric-desc">Parmi les prédits positifs, combien le sont vraiment ? <strong>Priorité : éviter les faux positifs.</strong></div>
+        </div>
+        <div class="cs-metric">
+          <div class="cs-metric-name">Recall</div>
+          <div class="cs-metric-desc">Parmi les vrais positifs, combien détectés ? <strong>Priorité : ne rien rater (fraude, maladie).</strong></div>
+        </div>
+        <div class="cs-metric">
+          <div class="cs-metric-name">F1-Score</div>
+          <div class="cs-metric-desc">Moyenne harmonique precision/recall. <strong>Le compromis quand les deux comptent.</strong></div>
+        </div>
+        <div class="cs-metric">
+          <div class="cs-metric-name">AUC-ROC</div>
+          <div class="cs-metric-desc">Capacité à séparer les classes à tous les seuils. 0.5 = hasard, 1.0 = parfait.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ 5. PIÈGES CLASSIQUES ══ -->
+  <div class="cs-section">
+    <h2>⚠️ Pièges classiques</h2>
+    <div class="cs-traps">
+
+      <div class="cs-trap">
+        <div class="cs-trap-icon">🚫</div>
+        <div>
+          <div class="cs-trap-bad"><code>scaler.fit_transform(X)</code> sur tout le dataset</div>
+          <div class="cs-trap-good">✅ Split d'abord → <code>fit_transform(X_train)</code> → <code>transform(X_test)</code></div>
+        </div>
+      </div>
+
+      <div class="cs-trap">
+        <div class="cs-trap-icon">🚫</div>
+        <div>
+          <div class="cs-trap-bad">Accuracy = 95% sur un dataset avec 95% de classe majoritaire</div>
+          <div class="cs-trap-good">✅ Regarder precision, recall, F1, confusion matrix</div>
+        </div>
+      </div>
+
+      <div class="cs-trap">
+        <div class="cs-trap-icon">🚫</div>
+        <div>
+          <div class="cs-trap-bad">Train R² = 0.95, Test R² = 0.62</div>
+          <div class="cs-trap-good">✅ Overfitting → régularisation, max_depth, plus de données, cross-val</div>
+        </div>
+      </div>
+
+      <div class="cs-trap">
+        <div class="cs-trap-icon">🚫</div>
+        <div>
+          <div class="cs-trap-bad">Encoder un code postal (75001) comme numérique</div>
+          <div class="cs-trap-good">✅ C'est catégoriel → convertir en string → One-Hot</div>
+        </div>
+      </div>
+
+      <div class="cs-trap">
+        <div class="cs-trap-icon">🚫</div>
+        <div>
+          <div class="cs-trap-bad">KNN ou PCA sans scaling</div>
+          <div class="cs-trap-good">✅ Les modèles basés sur la distance EXIGENT le scaling</div>
+        </div>
+      </div>
+
+      <div class="cs-trap">
+        <div class="cs-trap-icon">🚫</div>
+        <div>
+          <div class="cs-trap-bad">One-Hot Encoding sur taille (S, M, L, XL)</div>
+          <div class="cs-trap-good">✅ Il y a un ordre → Ordinal Encoding (S=1, M=2, L=3, XL=4)</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ 6. SCALING ══ -->
+  <div class="cs-section">
+    <h2>📏 Scaling — qui en a besoin ?</h2>
+    <div class="cs-cols cs-cols-2">
+      <div class="cs-col">
+        <h3 class="cs-yes">✅ Besoin de scaling</h3>
+        <div class="cs-list">KNN, SVM, Régression Linéaire, Régression Logistique, PCA, K-Means, Neural Networks</div>
+        <div class="cs-list-why">→ Utilisent des distances ou des gradients</div>
+      </div>
+      <div class="cs-col">
+        <h3 class="cs-no">❌ Pas besoin</h3>
+        <div class="cs-list">Arbre de Décision, Random Forest, XGBoost, Gradient Boosting</div>
+        <div class="cs-list-why">→ Basés sur des seuils (splits), l'échelle n'a pas d'importance</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 7. ACTIVATION + LOSS ══ -->
+  <div class="cs-section">
+    <h2>🧠 Deep Learning — Combos activation + loss</h2>
+    <div class="cs-table-wrap">
+      <table class="cs-table">
+        <thead>
+          <tr><th>Problème</th><th>Dernière couche</th><th>Loss</th><th>Exemple</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Régression</td>
+            <td><code>Dense(1)</code> (pas d'activation)</td>
+            <td><code>mse</code></td>
+            <td>Prédire un prix</td>
+          </tr>
+          <tr>
+            <td>Classif. binaire</td>
+            <td><code>Dense(1, activation='sigmoid')</code></td>
+            <td><code>binary_crossentropy</code></td>
+            <td>Spam / pas spam</td>
+          </tr>
+          <tr>
+            <td>Classif. multi-classes</td>
+            <td><code>Dense(N, activation='softmax')</code></td>
+            <td><code>categorical_crossentropy</code></td>
+            <td>Chien / chat / oiseau</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cs-note">Couches cachées : toujours <code>ReLU</code> par défaut. Régularisation : <code>Dropout(0.3)</code>.</div>
+  </div>
+
+  <!-- ══ 8. FORMULES RAPIDES ══ -->
+  <div class="cs-section">
+    <h2>🧮 Formules à retenir</h2>
+    <div class="cs-formulas">
+      <div class="cs-formula">
+        <span class="cs-formula-name">IQR (outliers)</span>
+        <span class="cs-formula-eq">Q1 − 1.5×IQR &lt; normal &lt; Q3 + 1.5×IQR</span>
+      </div>
+      <div class="cs-formula">
+        <span class="cs-formula-name">RMSE</span>
+        <span class="cs-formula-eq">√(Σ(ŷᵢ − yᵢ)² / n)</span>
+      </div>
+      <div class="cs-formula">
+        <span class="cs-formula-name">R²</span>
+        <span class="cs-formula-eq">1 − (SS_res / SS_tot)</span>
+      </div>
+      <div class="cs-formula">
+        <span class="cs-formula-name">Precision</span>
+        <span class="cs-formula-eq">TP / (TP + FP)</span>
+      </div>
+      <div class="cs-formula">
+        <span class="cs-formula-name">Recall</span>
+        <span class="cs-formula-eq">TP / (TP + FN)</span>
+      </div>
+      <div class="cs-formula">
+        <span class="cs-formula-name">F1</span>
+        <span class="cs-formula-eq">2 × (P × R) / (P + R)</span>
+      </div>
+      <div class="cs-formula">
+        <span class="cs-formula-name">Sigmoïde</span>
+        <span class="cs-formula-eq">σ(x) = 1 / (1 + e⁻ˣ)</span>
+      </div>
+      <div class="cs-formula">
+        <span class="cs-formula-name">Silhouette</span>
+        <span class="cs-formula-eq">(b − a) / max(a, b) — entre −1 et 1</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cs-footer">
+    <a href="/" class="cs-back-btn">← Retour à l'accueil</a>
+  </div>
+
+</div>

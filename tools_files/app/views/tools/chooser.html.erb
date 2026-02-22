@@ -1,0 +1,302 @@
+<div class="chooser-page">
+
+  <div class="chooser-header">
+    <div class="chooser-header-icon">🧭</div>
+    <h1>Quel modèle choisir ?</h1>
+    <p class="chooser-sub">Réponds à quelques questions et on te recommande le meilleur modèle pour ton problème.</p>
+  </div>
+
+  <!-- Decision flow -->
+  <div class="chooser-flow" id="chooserFlow">
+
+    <!-- Q1: Type de problème -->
+    <div class="chooser-step active" id="step1" data-step="1">
+      <div class="chooser-q-num">Question 1</div>
+      <h2 class="chooser-question">Quel est ton objectif ?</h2>
+      <div class="chooser-options">
+        <button class="chooser-opt" onclick="answer(1, 'regression')">
+          <span class="chooser-opt-icon">📈</span>
+          <div>
+            <div class="chooser-opt-title">Prédire un nombre</div>
+            <div class="chooser-opt-desc">Prix, salaire, température, durée…</div>
+          </div>
+        </button>
+        <button class="chooser-opt" onclick="answer(1, 'classification')">
+          <span class="chooser-opt-icon">🏷️</span>
+          <div>
+            <div class="chooser-opt-title">Prédire une catégorie</div>
+            <div class="chooser-opt-desc">Spam/pas spam, fraude, type de client…</div>
+          </div>
+        </button>
+        <button class="chooser-opt" onclick="answer(1, 'clustering')">
+          <span class="chooser-opt-icon">🧩</span>
+          <div>
+            <div class="chooser-opt-title">Grouper sans labels</div>
+            <div class="chooser-opt-desc">Segmentation, patterns cachés…</div>
+          </div>
+        </button>
+        <button class="chooser-opt" onclick="answer(1, 'images')">
+          <span class="chooser-opt-icon">🖼️</span>
+          <div>
+            <div class="chooser-opt-title">Classifier des images</div>
+            <div class="chooser-opt-desc">Reconnaître des objets, des visages…</div>
+          </div>
+        </button>
+        <button class="chooser-opt" onclick="answer(1, 'sequences')">
+          <span class="chooser-opt-icon">📝</span>
+          <div>
+            <div class="chooser-opt-title">Traiter des séquences / texte</div>
+            <div class="chooser-opt-desc">Séries temporelles, NLP, traduction…</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Q2: Taille du dataset -->
+    <div class="chooser-step" id="step2" data-step="2">
+      <div class="chooser-q-num">Question 2</div>
+      <h2 class="chooser-question">Combien de données ?</h2>
+      <div class="chooser-options">
+        <button class="chooser-opt" onclick="answer(2, 'small')">
+          <span class="chooser-opt-icon">📄</span>
+          <div>
+            <div class="chooser-opt-title">&lt; 1 000 lignes</div>
+            <div class="chooser-opt-desc">Petit dataset, données limitées</div>
+          </div>
+        </button>
+        <button class="chooser-opt" onclick="answer(2, 'medium')">
+          <span class="chooser-opt-icon">📑</span>
+          <div>
+            <div class="chooser-opt-title">1 000 – 100 000 lignes</div>
+            <div class="chooser-opt-desc">Dataset standard</div>
+          </div>
+        </button>
+        <button class="chooser-opt" onclick="answer(2, 'large')">
+          <span class="chooser-opt-icon">🗄️</span>
+          <div>
+            <div class="chooser-opt-title">&gt; 100 000 lignes</div>
+            <div class="chooser-opt-desc">Gros volume de données</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Q3: Interprétabilité -->
+    <div class="chooser-step" id="step3" data-step="3">
+      <div class="chooser-q-num">Question 3</div>
+      <h2 class="chooser-question">As-tu besoin d'expliquer le modèle ?</h2>
+      <div class="chooser-options">
+        <button class="chooser-opt" onclick="answer(3, 'yes')">
+          <span class="chooser-opt-icon">🔍</span>
+          <div>
+            <div class="chooser-opt-title">Oui, c'est important</div>
+            <div class="chooser-opt-desc">Médical, finance, juridique — il faut justifier les décisions</div>
+          </div>
+        </button>
+        <button class="chooser-opt" onclick="answer(3, 'no')">
+          <span class="chooser-opt-icon">🎯</span>
+          <div>
+            <div class="chooser-opt-title">Non, la performance prime</div>
+            <div class="chooser-opt-desc">Kaggle, recommandation, détection automatique</div>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="chooser-result" id="chooserResult" style="display:none">
+      <div class="chooser-result-icon" id="resultIcon"></div>
+      <h2 class="chooser-result-title">Notre recommandation</h2>
+
+      <div class="chooser-reco-cards" id="recoCards"></div>
+
+      <div class="chooser-result-path" id="resultPath"></div>
+
+      <div class="chooser-result-actions">
+        <button class="chooser-restart-btn" onclick="restart()">🔄 Recommencer</button>
+        <a href="/" class="chooser-back-btn">← Retour à l'accueil</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  var answers = {};
+
+  var recommendations = {
+    // Regression
+    'regression_small_yes': {
+      icon: '📈', models: [
+        { name: 'Régression Linéaire / Ridge', icon: '📈', why: 'Interprétable, coefficients lisibles, robuste sur peu de données.', link: '/workflows/linreg' },
+        { name: 'Arbre de Décision (max_depth limité)', icon: '🌳', why: 'Règles explicables, pas besoin de scaling.', link: '/workflows/trees' }
+      ]},
+    'regression_small_no': {
+      icon: '📈', models: [
+        { name: 'Random Forest Regressor', icon: '🌲', why: 'Robuste même sur peu de données, peu de tuning.', link: '/workflows/trees' },
+        { name: 'KNN Regressor', icon: '🔵', why: 'Simple et efficace sur petits datasets.', link: '/workflows/knn' }
+      ]},
+    'regression_medium_yes': {
+      icon: '📈', models: [
+        { name: 'Ridge / Lasso', icon: '📈', why: 'Coefficients interprétables + régularisation.', link: '/workflows/linreg' },
+        { name: 'Random Forest + feature_importances_', icon: '🌲', why: 'Moins interprétable mais donne les features clés.', link: '/workflows/trees' }
+      ]},
+    'regression_medium_no': {
+      icon: '🚀', models: [
+        { name: 'XGBoost Regressor', icon: '🚀', why: 'Meilleure performance sur données tabulaires. Le standard Kaggle.', link: '/workflows/boosting' },
+        { name: 'Random Forest Regressor', icon: '🌲', why: 'Solide backup, moins de tuning nécessaire.', link: '/workflows/trees' }
+      ]},
+    'regression_large_yes': {
+      icon: '📈', models: [
+        { name: 'Ridge / Lasso', icon: '📈', why: 'Scale bien, interprétable même sur gros volume.', link: '/workflows/linreg' },
+        { name: 'Random Forest (limité en profondeur)', icon: '🌲', why: 'feature_importances_ pour expliquer.', link: '/workflows/trees' }
+      ]},
+    'regression_large_no': {
+      icon: '🚀', models: [
+        { name: 'XGBoost Regressor', icon: '🚀', why: 'Performance maximale, gère les gros volumes.', link: '/workflows/boosting' },
+        { name: 'Neural Network (Dense)', icon: '🧠', why: 'Si XGBoost plafonne, le deep learning prend le relai.', link: '/workflows/nn' }
+      ]},
+
+    // Classification
+    'classification_small_yes': {
+      icon: '🎯', models: [
+        { name: 'Régression Logistique', icon: '🎯', why: 'Probabilités calibrées, coefficients interprétables.', link: '/workflows/logreg' },
+        { name: 'Arbre de Décision', icon: '🌳', why: 'Règles if/else lisibles, parfait pour le médical.', link: '/workflows/trees' }
+      ]},
+    'classification_small_no': {
+      icon: '🎯', models: [
+        { name: 'Random Forest Classifier', icon: '🌲', why: 'Robuste, bon par défaut.', link: '/workflows/trees' },
+        { name: 'SVM (kernel RBF)', icon: '⬛', why: 'Puissant sur petits datasets haute dimension.', link: '/workflows/svm' }
+      ]},
+    'classification_medium_yes': {
+      icon: '🎯', models: [
+        { name: 'Régression Logistique', icon: '🎯', why: 'Le standard pour la classification interprétable.', link: '/workflows/logreg' },
+        { name: 'Arbre de Décision (pruné)', icon: '🌳', why: 'Visualisable, explicable aux non-techniques.', link: '/workflows/trees' }
+      ]},
+    'classification_medium_no': {
+      icon: '🚀', models: [
+        { name: 'XGBoost Classifier', icon: '🚀', why: 'Top performance sur données tabulaires.', link: '/workflows/boosting' },
+        { name: 'Random Forest Classifier', icon: '🌲', why: 'Valeur sûre, bonne baseline.', link: '/workflows/trees' }
+      ]},
+    'classification_large_yes': {
+      icon: '🎯', models: [
+        { name: 'Régression Logistique', icon: '🎯', why: 'Scale parfaitement, reste interprétable.', link: '/workflows/logreg' }
+      ]},
+    'classification_large_no': {
+      icon: '🚀', models: [
+        { name: 'XGBoost Classifier', icon: '🚀', why: 'Le meilleur sur données tabulaires massives.', link: '/workflows/boosting' },
+        { name: 'Neural Network + Dropout', icon: '🧠', why: 'Quand les données sont très nombreuses et complexes.', link: '/workflows/nn' }
+      ]},
+
+    // Clustering (skip Q3)
+    'clustering_small_any': {
+      icon: '🧩', models: [
+        { name: 'K-Means', icon: '🧩', why: 'Simple, efficace, méthode du coude pour choisir K.', link: '/workflows/kmeans' },
+      ]},
+    'clustering_medium_any': {
+      icon: '🧩', models: [
+        { name: 'K-Means', icon: '🧩', why: 'Standard, rapide, scalable.', link: '/workflows/kmeans' },
+      ]},
+    'clustering_large_any': {
+      icon: '🧩', models: [
+        { name: 'K-Means (Mini-Batch)', icon: '🧩', why: 'Version scalable pour gros volumes.', link: '/workflows/kmeans' },
+      ]},
+
+    // Images (skip Q2, Q3)
+    'images_any_any': {
+      icon: '🖼️', models: [
+        { name: 'CNN + Transfer Learning (VGG16)', icon: '🖼️', why: 'Réutilise des features pré-apprises sur ImageNet. Efficace même avec peu d\'images.', link: '/workflows/cnn' },
+      ]},
+
+    // Sequences (skip Q2, Q3)
+    'sequences_any_any': {
+      icon: '📝', models: [
+        { name: 'LSTM (Long Short-Term Memory)', icon: '📝', why: 'Mémoire longue pour les séquences. Standard pour le NLP et les séries temporelles.', link: '/workflows/rnn' },
+      ]},
+  };
+
+  window.answer = function(step, value) {
+    answers[step] = value;
+
+    // Highlight selected
+    var btns = document.querySelectorAll('#step' + step + ' .chooser-opt');
+    btns.forEach(function(b) { b.classList.remove('selected'); });
+    event.currentTarget.classList.add('selected');
+
+    // Special paths: images/sequences skip to result
+    if (step === 1 && (value === 'images' || value === 'sequences')) {
+      setTimeout(function() { showResult(); }, 300);
+      return;
+    }
+
+    // Clustering: skip Q3
+    if (step === 2 && answers[1] === 'clustering') {
+      setTimeout(function() { showResult(); }, 300);
+      return;
+    }
+
+    // Normal flow: show next step
+    var nextStep = step + 1;
+    if (nextStep <= 3) {
+      setTimeout(function() {
+        document.getElementById('step' + nextStep).classList.add('active');
+        document.getElementById('step' + nextStep).scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    } else {
+      setTimeout(function() { showResult(); }, 300);
+    }
+  };
+
+  function showResult() {
+    var type = answers[1] || 'regression';
+    var size = answers[2] || 'any';
+    var interp = answers[3] || 'any';
+
+    var key = type + '_' + size + '_' + interp;
+    var reco = recommendations[key];
+    if (!reco) {
+      // Fallback
+      key = type + '_any_any';
+      reco = recommendations[key];
+    }
+    if (!reco) {
+      reco = { icon: '🤔', models: [{ name: 'Pas de recommandation', icon: '❓', why: 'Combinaison non couverte.', link: '/' }] };
+    }
+
+    document.getElementById('resultIcon').textContent = reco.icon;
+
+    var cardsHtml = reco.models.map(function(m, idx) {
+      return '<a href="' + m.link + '" class="chooser-reco-card' + (idx === 0 ? ' reco-primary' : '') + '">' +
+        '<div class="reco-card-rank">' + (idx === 0 ? '🥇 Premier choix' : '🥈 Alternative') + '</div>' +
+        '<div class="reco-card-header"><span class="reco-card-icon">' + m.icon + '</span><span class="reco-card-name">' + m.name + '</span></div>' +
+        '<div class="reco-card-why">' + m.why + '</div>' +
+        '<div class="reco-card-link">Voir le workflow →</div>' +
+      '</a>';
+    }).join('');
+    document.getElementById('recoCards').innerHTML = cardsHtml;
+
+    // Show path
+    var pathParts = [];
+    if (answers[1]) pathParts.push(answers[1]);
+    if (answers[2]) pathParts.push(answers[2]);
+    if (answers[3]) pathParts.push('interprétable=' + answers[3]);
+    document.getElementById('resultPath').innerHTML = '<span class="path-label">Ton chemin :</span> ' +
+      pathParts.map(function(p) { return '<span class="path-tag">' + p + '</span>'; }).join(' → ');
+
+    document.getElementById('chooserResult').style.display = '';
+    document.getElementById('chooserResult').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  window.restart = function() {
+    answers = {};
+    document.querySelectorAll('.chooser-step').forEach(function(s, i) {
+      if (i === 0) s.classList.add('active');
+      else s.classList.remove('active');
+    });
+    document.querySelectorAll('.chooser-opt').forEach(function(b) { b.classList.remove('selected'); });
+    document.getElementById('chooserResult').style.display = 'none';
+    document.getElementById('step1').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+})();
+</script>
