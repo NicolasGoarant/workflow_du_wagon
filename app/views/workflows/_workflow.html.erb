@@ -17,6 +17,7 @@
   </div>
 
   <!-- Steps -->
+  <%= render "shared/workflow_example", workflow: workflow %>
   <div class="flow">
     <% workflow[:steps].each_with_index do |step, i| %>
       <div class="flow-step step-<%= workflow[:badge_color] %>">

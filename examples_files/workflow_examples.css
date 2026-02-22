@@ -1,0 +1,85 @@
+/* ====== WORKFLOW EXAMPLES ====== */
+.wf-example {
+  margin: 30px 0; padding: 24px 28px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; border-left: 3px solid #22d3ee;
+}
+
+.wf-example-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+}
+.wf-example-icon { font-size: 1.4rem; }
+.wf-example-header h3 {
+  font-family: var(--font-display); font-size: 1rem; font-weight: 700;
+  margin: 0; color: var(--text);
+}
+
+.wf-example-label {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: #22d3ee; margin: 16px 0 8px;
+}
+
+/* DataFrame table */
+.wf-df-wrap {
+  overflow-x: auto; border-radius: 8px; border: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.wf-df {
+  width: 100%; border-collapse: collapse; font-size: 0.78rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.wf-df th {
+  background: rgba(0,0,0,0.2); padding: 8px 12px; text-align: left;
+  font-weight: 700; font-size: 0.72rem; color: #22d3ee;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.wf-df td {
+  padding: 7px 12px; border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: var(--text-soft); white-space: nowrap;
+}
+.wf-df tbody tr:hover { background: rgba(255,255,255,0.02); }
+.wf-df-nil { color: #f87171; font-style: italic; }
+
+.wf-df-result th { color: #4ade80; }
+.wf-df-result { border-color: rgba(34,197,94,0.2); }
+
+/* Steps */
+.wf-example-steps { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.wf-example-step {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 12px; background: var(--bg); border-radius: 7px;
+  border: 1px solid var(--border);
+}
+.wf-example-step-num {
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; min-width: 22px; border-radius: 50%;
+  background: rgba(34,211,238,0.15); color: #22d3ee;
+  font-weight: 700; font-size: 0.68rem;
+}
+.wf-example-step-text {
+  font-size: 0.8rem; color: var(--text-soft); line-height: 1.55;
+}
+.wf-example-step-text code {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+  background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 3px; color: #86efac;
+}
+.wf-example-step-text strong { color: var(--text); }
+
+/* Conclusion */
+.wf-example-conclusion {
+  display: flex; gap: 10px; align-items: flex-start;
+  margin-top: 14px; padding: 12px 16px;
+  background: rgba(34,211,238,0.06); border: 1px solid rgba(34,211,238,0.15);
+  border-radius: 8px; font-size: 0.82rem; color: var(--text-soft); line-height: 1.55;
+}
+.wf-example-conclusion-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+/* Mobile */
+@media (max-width: 600px) {
+  .wf-example { padding: 16px 14px; }
+  .wf-example-header h3 { font-size: 0.92rem; }
+  .wf-example-step-text { font-size: 0.82rem; }
+  .wf-example-conclusion { font-size: 0.82rem; }
+  .wf-df { font-size: 0.72rem; }
+  .wf-df th, .wf-df td { padding: 6px 8px; }
+}

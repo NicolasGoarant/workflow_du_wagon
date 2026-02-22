@@ -1,0 +1,74 @@
+<% ex = defined?(WORKFLOW_EXAMPLES) && WORKFLOW_EXAMPLES[workflow[:slug]] %>
+<% if ex %>
+<div class="wf-example">
+  <div class="wf-example-header">
+    <span class="wf-example-icon">📊</span>
+    <h3><%= ex[:title] %></h3>
+  </div>
+
+  <!-- Input DataFrame -->
+  <div class="wf-example-label">Données d'entrée</div>
+  <div class="wf-df-wrap">
+    <table class="wf-df">
+      <thead>
+        <tr>
+          <% ex[:dataframe][0].each do |col| %>
+            <th><%= col %></th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <% ex[:dataframe][1..].each do |row| %>
+          <tr>
+            <% row.each do |val| %>
+              <td class="<%= 'wf-df-nil' if val.nil? %>"><%= val.nil? ? 'NaN' : val %></td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- What the model does -->
+  <div class="wf-example-label"><%= workflow[:slug] == 'eda' ? 'Ce que révèle l\'exploration' : 'Ce que fait le modèle' %></div>
+  <div class="wf-example-steps">
+    <% ex[:problems].each_with_index do |p, i| %>
+      <div class="wf-example-step">
+        <span class="wf-example-step-num"><%= i + 1 %></span>
+        <span class="wf-example-step-text"><%= p.html_safe %></span>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Result -->
+  <% if ex[:result] %>
+    <div class="wf-example-label">Résultat</div>
+    <div class="wf-df-wrap">
+      <table class="wf-df wf-df-result">
+        <thead>
+          <tr>
+            <% ex[:result][0].each do |col| %>
+              <th><%= col %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% ex[:result][1..].each do |row| %>
+            <tr>
+              <% row.each do |val| %>
+                <td><%= val %></td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <!-- Conclusion -->
+  <div class="wf-example-conclusion">
+    <span class="wf-example-conclusion-icon">💡</span>
+    <span><%= ex[:conclusion] %></span>
+  </div>
+</div>
+<% end %>
