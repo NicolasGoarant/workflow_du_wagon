@@ -4,7 +4,7 @@
   <div class="quiz-start" id="quizStart">
     <div class="quiz-start-icon">🧪</div>
     <h1>Quiz Data Science</h1>
-    <p class="quiz-start-sub">40 questions pour tester tes connaissances sur tout le cursus</p>
+    <p class="quiz-start-sub"><%= @questions.length %> questions pour tester tes connaissances sur tout le cursus</p>
 
     <p class="quiz-cats-hint">Clique sur une catégorie pour lancer un quiz ciblé :</p>
     <div class="quiz-start-cats">
@@ -18,9 +18,10 @@
 
     <div class="quiz-mode-select">
       <p class="quiz-mode-label">Nombre :</p>
-      <button class="quiz-mode-btn active" data-mode="all" onclick="selectMode(this)">Toutes (40)</button>
+      <button class="quiz-mode-btn active" data-mode="all" onclick="selectMode(this)">Toutes (<%= @questions.length %>)</button>
       <button class="quiz-mode-btn" data-mode="10" onclick="selectMode(this)">Express (10)</button>
       <button class="quiz-mode-btn" data-mode="20" onclick="selectMode(this)">Standard (20)</button>
+      <button class="quiz-mode-btn" data-mode="50" onclick="selectMode(this)">Marathon (50)</button>
     </div>
 
     <div class="quiz-diff-select">
@@ -41,7 +42,7 @@
       <div class="quiz-progress-bar" id="quizProgressBar"></div>
     </div>
     <div class="quiz-progress-text">
-      <span id="quizCounter">1/40</span>
+      <span id="quizCounter">1/10</span>
       <span id="quizScore">Score : 0</span>
       <span id="quizDiffBadge" class="quiz-diff-badge"></span>
     </div>

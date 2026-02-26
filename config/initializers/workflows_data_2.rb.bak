@@ -1059,9 +1059,9 @@ WORKFLOWS.push(
     badge: "Production", badge_color: "orange",
     subtitle: "Du notebook au modèle en production accessible par API",
     analogy_title: "L'analogie du restaurant",
-    analogy_text: "Ton notebook = la recette chez toi. Le déploiement = ouvrir un restaurant. Il faut : emballer la recette (joblib), créer le service (FastAPI), construire la cuisine (Docker), installer le lieu (Cloud Run). Et surtout : ne pas recharger la recette à chaque client !",
+    analogy_text: "Ton notebook = la recette chez toi. Le déploiement = ouvrir un restaurant. Il faut : emballer la recette (joblib), créer le service (FastAPI), construire la cuisine (Docker), installer le lieu (Cloud Run).",
     steps: [
-      { title: "Construire l'API avec FastAPI", explain: "FastAPI crée un serveur HTTP qui expose ton modèle. Chaque requête GET → prédiction JSON. FastAPI type automatiquement les paramètres et génère la doc Swagger.",
+      { title: "API avec FastAPI", explain: "L'interface entre le monde et ton modèle. Envoi HTTP → prédiction JSON.",
         code_block: <<~PY,
           # api.py
           from fastapi import FastAPI
@@ -1080,7 +1080,6 @@ WORKFLOWS.push(
               return {"prediction": int(pred), "confidence": round(float(proba), 3)}
 
           # Lancer : uvicorn api:app --reload
-          # Doc auto : http://localhost:8000/docs
         PY
         output: <<~OUT,
           $ curl "localhost:8000/predict?age=35&income=55000&city=Nancy"
@@ -1088,165 +1087,43 @@ WORKFLOWS.push(
           {"prediction": 1, "confidence": 0.873}
         OUT
         code_notes: [
-          { marker: "@app.get('/predict')", text: "Endpoint GET. FastAPI type <code>age: int</code> automatiquement depuis les query params. Erreur 422 si le type ne matche pas." },
-          { marker: "pipe.predict(X)", text: "La pipeline fait TOUT en une ligne : imputer, scaler, encoder, prédire. C'est pour ça qu'on a tout mis dans un Pipeline sklearn." },
-          { marker: "/docs", text: "FastAPI génère automatiquement une page Swagger interactive. Très utile pour tester sans curl." },
+          { marker: "@app.get('/predict')", text: "Endpoint GET. FastAPI type les paramètres automatiquement." },
+          { marker: "pipe.predict(X)", text: "La pipeline fait TOUT : imputer, scaler, encoder, prédire." },
         ] },
-      { title: "Accélérer avec app.state", explain: "Problème : si tu charges le modèle dans la fonction predict(), il est rechargé À CHAQUE REQUÊTE. Avec un modèle Deep Learning lourd, c'est très lent. Solution : charger une seule fois au démarrage dans app.state.",
-        code_block: <<~PY,
-          # api.py (version optimisée)
-          from fastapi import FastAPI
-          import joblib
-          import pandas as pd
-
-          app = FastAPI()
-
-          # Charger le modèle UNE SEULE FOIS au démarrage
-          app.state.model = joblib.load("pipeline.joblib")
-
-          @app.get("/predict")
-          def predict(age: int, income: float, city: str):
-              pipe = app.state.model  # Réutilise l'objet déjà en mémoire
-              X = pd.DataFrame([{"age": age, "income": income,
-                                 "purchase_count": 0, "city": city, "gender": "M"}])
-              return {
-                  "prediction": int(pipe.predict(X)[0]),
-                  "confidence": round(float(pipe.predict_proba(X)[0].max()), 3)
-              }
-
-          # Lancer : uvicorn api:app --reload
-        PY
-        output: <<~OUT,
-          # AVANT (chargement à chaque requête) :
-          GET /predict → 2.3s (dont 2.1s de chargement modèle)
-
-          # APRÈS (app.state) :
-          GET /predict → 0.2s ← 10× plus rapide !
-        OUT
-        code_notes: [
-          { marker: "app.state.model", text: "<code>app.state</code> est un objet persistant en mémoire. Tout ce que tu y stockes au démarrage reste accessible dans toutes les routes, sans rechargement." },
-          { marker: "--reload", text: "En dev, <code>--reload</code> relance le serveur à chaque modification de code. En production, ne PAS l'utiliser." },
-        ] },
-      { title: "Tester l'API", explain: "Avant de déployer, on vérifie que l'API répond correctement. On teste en local avec curl, dans le navigateur, et avec les tests automatisés du challenge.",
-        code_block: <<~PY,
-          # 1. Tester dans le navigateur (FastAPI génère la page)
-          # http://localhost:8000/docs → bouton 'Try it out'
-
-          # 2. Tester avec curl depuis le terminal
-          # curl -X 'GET' \\
-          #   'http://localhost:8000/predict?age=35&income=55000&city=Nancy' \\
-          #   -H 'accept: application/json'
-
-          # 3. Tester avec Python (requests)
-          import requests
-          url = "http://localhost:8000/predict"
-          params = {"age": 35, "income": 55000, "city": "Nancy"}
-          response = requests.get(url, params=params)
-          print(response.json())
-
-          # 4. Tests automatisés Le Wagon
-          # make test_api_predict  → teste la réponse de l'API
-          # make test_kitt         → valide sur Kitt
-        PY
-        output: <<~OUT,
-          # Réponse attendue :
-          {"prediction": 1, "confidence": 0.873}
-
-          # Tests Le Wagon :
-          ✅ test_api_predict : 18/18 passed
-          ✅ test_kitt : progress tracked
-        OUT
-        code_notes: [
-          { marker: "/docs", text: "Page interactive Swagger générée automatiquement par FastAPI. Pas besoin de Postman." },
-          { marker: "make test_api_predict", text: "Les tests du challenge vérifient que l'API répond au bon format, avec les bons types, et des prédictions cohérentes." },
-        ] },
-      { title: "Construire l'image Docker", explain: "Docker empaquette ton code + le modèle + les dépendances dans une boîte hermétique. Ce qui marche en local marchera EXACTEMENT pareil en production.",
+      { title: "Dockeriser et déployer", explain: "Docker = boîte hermétique. Cloud Run = serverless auto-scaling.",
         code_block: <<~PY,
           # Dockerfile
-          FROM python:3.10-slim
+          # FROM python:3.10-slim
+          # WORKDIR /app
+          # COPY requirements.txt .
+          # RUN pip install -r requirements.txt
+          # COPY . .
+          # CMD uvicorn api:app --host 0.0.0.0 --port $PORT
 
-          WORKDIR /app
+          # Build & test
+          # docker build -t my-model .
+          # docker run -p 8000:8000 -e PORT=8000 my-model
 
-          # D'abord les dépendances (cache Docker)
-          COPY requirements.txt .
-          RUN pip install -r requirements.txt
-
-          # Ensuite le code (change plus souvent)
-          COPY . .
-
-          # Commande de lancement
-          CMD uvicorn api:app --host 0.0.0.0 --port $PORT
-
-          # ─── requirements.txt ───
-          # fastapi==0.104.1
-          # uvicorn==0.24.0
-          # joblib==1.3.2
-          # scikit-learn==1.3.2
-          # pandas==2.1.4
-          # xgboost==2.0.3  # si utilisé
+          # Deploy GCP Cloud Run
+          # gcloud builds submit --tag gcr.io/PROJECT/my-model
+          # gcloud run deploy --image gcr.io/PROJECT/my-model --allow-unauthenticated
         PY
         output: <<~OUT,
-          # Build l'image
-          $ docker build -t my-model .
-          Step 1/6 : FROM python:3.10-slim
-          ...
-          Successfully tagged my-model:latest
-
-          # Tester en local (simule Cloud Run)
-          $ docker run -p 8000:8000 -e PORT=8000 my-model
-          INFO:     Uvicorn running on http://0.0.0.0:8000
-
-          # Vérifier
-          $ curl "localhost:8000/predict?age=35&income=55000&city=Nancy"
-          {"prediction": 1, "confidence": 0.873}
+          ✅ https://my-model-xxxxx.run.app
+          0 requêtes = 0 €
+          1000 req/sec = auto-scaling
+          HTTPS automatique
         OUT
         code_notes: [
-          { marker: "python:3.10-slim", text: "Image légère (~150 MB vs ~900 MB pour l'image complète). Utilise toujours <code>slim</code> en production." },
-          { marker: "COPY requirements.txt", text: "On copie les requirements AVANT le code pour profiter du cache Docker. Si le code change mais pas les dépendances, Docker skip l'install." },
-          { marker: "-e PORT=8000", text: "Cloud Run injecte le port via la variable <code>$PORT</code>. Ne JAMAIS hardcoder le port dans le code." },
-          { marker: "requirements.txt", text: "Versions FIGÉES avec <code>==</code>. Sans ça, pip installe la dernière version et ça peut casser en production." },
-        ] },
-      { title: "Déployer sur Cloud Run (GCP)", explain: "Cloud Run = serverless. 0 requête = 0€. Auto-scaling. HTTPS automatique. Tu push l'image, Google fait le reste.",
-        code_block: <<~PY,
-          # 1. Builder et pousser l'image sur Google Container Registry
-          # gcloud builds submit --tag gcr.io/PROJECT_ID/my-model
-
-          # 2. Déployer sur Cloud Run
-          # gcloud run deploy my-model \\
-          #   --image gcr.io/PROJECT_ID/my-model \\
-          #   --region europe-west1 \\
-          #   --allow-unauthenticated \\
-          #   --memory 2Gi
-
-          # 3. Récupérer l'URL
-          # gcloud run services describe my-model --format='value(status.url)'
-        PY
-        output: <<~OUT,
-          Deploying container to Cloud Run service [my-model]...
-          ✅ https://my-model-abc123-ew.a.run.app
-
-          # Test en production :
-          $ curl "https://my-model-abc123-ew.a.run.app/predict?age=35&income=55000&city=Nancy"
-          {"prediction": 1, "confidence": 0.873}
-
-          # Caractéristiques :
-          0 requêtes = 0 € (scale to zero)
-          1000 req/sec = auto-scaling automatique
-          HTTPS + certificat SSL inclus
-        OUT
-        code_notes: [
-          { marker: "gcloud builds submit", text: "Build l'image Docker dans le cloud (pas besoin de Docker en local) et la push sur le registry." },
-          { marker: "--allow-unauthenticated", text: "Rend l'API publique. Pour une API privée, supprimer ce flag et authentifier les requêtes." },
-          { marker: "--memory 2Gi", text: "Alloue 2 Go de RAM. Pour un modèle lourd (Deep Learning), monter à 4Gi ou 8Gi." },
+          { marker: "python:3.10-slim", text: "Image légère ~150 MB. L'image complète ~900 MB." },
+          { marker: "--port $PORT", text: "Cloud Run injecte le port. Ne pas hardcoder." },
         ] },
     ],
-    tips: { title: "📋 Checklist déploiement", items: [
-      "requirements.txt avec versions FIGÉES (==) — sinon ça casse en prod",
-      ".env pour les secrets (jamais dans le code, jamais dans Git !)",
-      "Tester en local avec Docker AVANT de déployer",
-      "app.state pour charger le modèle une seule fois (pas à chaque requête)",
-      "Modèle sur GCS plutôt que dans l'image Docker (si > 500 MB)",
-      "make test_api_predict pour valider avant de push",
+    tips: { title: "📋 Checklist", items: [
+      "requirements.txt avec versions FIGÉES (==)",
+      ".env pour les secrets (jamais dans le code !)",
+      "Tester en local avant de déployer",
+      "Modèle sur GCS plutôt que dans l'image Docker",
     ]},
     code_filename: "mlops_deploy.py",
     code_content: <<~PY,
@@ -1254,14 +1131,13 @@ WORKFLOWS.push(
       import joblib, pandas as pd
 
       app = FastAPI()
-      app.state.model = joblib.load("pipeline.joblib")
+      pipe = joblib.load("pipeline.joblib")
 
       @app.get("/predict")
       def predict(age: int, income: float, city: str):
-          pipe = app.state.model
           X = pd.DataFrame([{"age": age, "income": income, "city": city}])
           return {"prediction": int(pipe.predict(X)[0]),
-                  "confidence": round(float(pipe.predict_proba(X)[0].max()), 3)}
+                  "confidence": float(pipe.predict_proba(X)[0].max())}
     PY
   },
 )
